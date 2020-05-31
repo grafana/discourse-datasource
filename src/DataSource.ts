@@ -12,7 +12,7 @@ import {
 
 import { MyQuery, DiscourseDataSourceOptions, defaultQuery } from './types';
 
-export class DataSource extends DataSourceApi<MyQuery, DiscourseDataSourceOptions> {
+export class DiscourseDataSource extends DataSourceApi<MyQuery, DiscourseDataSourceOptions> {
   constructor(private instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions>) {
     super(instanceSettings);
   }
@@ -23,7 +23,7 @@ export class DataSource extends DataSourceApi<MyQuery, DiscourseDataSourceOption
     const to = range!.to.valueOf();
 
     // Return a constant for each query.
-    const data = options.targets.map((target) => {
+    const data = options.targets.map(target => {
       const query = defaults(target, defaultQuery);
       return new MutableDataFrame({
         refId: query.refId,
@@ -38,15 +38,18 @@ export class DataSource extends DataSourceApi<MyQuery, DiscourseDataSourceOption
   }
 
   async testDatasource() {
-    const result = await getBackendSrv().datasourceRequest({
-      url: `${this.instanceSettings.url}/discourse/admin/reports/topics_with_no_response.json`,
-      method: 'GET',
-    });
+    let result: any;
 
-    if (!result || result.title === 'Topics with no response') {
+    try {
+      result = await this.apiGet('admin/reports/topics_with_no_response.json');
+    } catch (error) {
+      console.log(error);
+    }
+
+    if (result?.data?.report?.title !== 'Topics with no response') {
       return {
         status: 'error',
-        message: 'Failed with request to the Discourse API',
+        message: 'Invalid credentials. Failed with request to the Discourse API',
       };
     }
 
@@ -54,5 +57,14 @@ export class DataSource extends DataSourceApi<MyQuery, DiscourseDataSourceOption
       status: 'success',
       message: 'Success',
     };
+  }
+
+  async apiGet(path: string): Promise<any> {
+    const result = await getBackendSrv().datasourceRequest({
+      url: `${this.instanceSettings.url}/discourse/${path}`,
+      method: 'GET',
+    });
+
+    return result;
   }
 }
