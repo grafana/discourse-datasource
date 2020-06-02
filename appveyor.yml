@@ -19,8 +19,9 @@ test_script:
   # Output useful info for debugging.
   - node --version
   - npm --version
+  - yarn test
 
 # Run the build
 build_script:
-  - yarn dev   # This will also run prettier!
+  - yarn dev # This will also run prettier!
   - yarn build # make sure both scripts work

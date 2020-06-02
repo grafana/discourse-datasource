@@ -1,6 +1,6 @@
 {
   "type": "datasource",
-  "name": "discourse-datasource",
+  "name": "Discourse Datasource",
   "id": "grafana-discourse-datasource",
   "metrics": true,
   "info": {
