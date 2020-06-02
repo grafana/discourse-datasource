@@ -1,6 +1,6 @@
 import { DiscourseDataSource } from './DataSource';
-import { DiscourseDataSourceOptions } from './types';
-import { DataSourceInstanceSettings, PluginMeta } from '@grafana/data';
+import { DiscourseDataSourceOptions, MyQuery } from './types';
+import { DataQueryRequest, DataSourceInstanceSettings, PluginMeta, toUtc } from '@grafana/data';
 import { BackendSrv, BackendSrvRequest, setBackendSrv } from '@grafana/runtime';
 import { topicsWithNoResponse } from './testdata/topics_with_no_response';
 
@@ -51,6 +51,41 @@ describe('DiscourseDatasource', () => {
         const result = await ds.testDatasource();
         expect(result.status).toBe('error');
         expect(result.message).toBe('Invalid credentials. Failed with request to the Discourse API');
+      });
+    });
+  });
+
+  describe('query', () => {
+    describe('', () => {
+      beforeEach(() => {
+        setupBackendSrv({
+          url:
+            '/api/datasources/proxy/1/discourse/admin/reports/topics_with_no_response.json?start_date=2020-03-15&end_date=2020-03-22',
+          response: topicsWithNoResponse,
+        });
+      });
+
+      it('should return data frames', async () => {
+        const options = {
+          range: {
+            from: toUtc('2020-03-15T20:00:00Z'),
+            to: toUtc('2020-03-22T23:59:00Z'),
+          },
+          rangeRaw: {
+            from: 'now-4h',
+            to: 'now',
+          },
+          targets: [{ type: 'reports', reportName: 'topics_with_no_response.json' }],
+        } as DataQueryRequest<MyQuery>;
+
+        const result = await ds.query(options);
+        expect(result.data[0].fields[0].name).toBe('time');
+        expect(result.data[0].fields[1].name).toBe('value');
+
+        expect(result.data[0].fields[0].values.get(0)).toBe(1588284000000);
+        expect(result.data[0].fields[1].values.get(0)).toBe(15);
+        expect(result.data[0].fields[0].values.get(1)).toBe(1588370400000);
+        expect(result.data[0].fields[1].values.get(1)).toBe(9);
       });
     });
   });

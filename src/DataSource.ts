@@ -3,7 +3,9 @@ import { getBackendSrv } from '@grafana/runtime';
 
 import {
   DataQueryRequest,
+  dateTimeParse,
   DataQueryResponse,
+  DataQueryResponseData,
   DataSourceApi,
   DataSourceInstanceSettings,
   MutableDataFrame,
@@ -19,20 +21,31 @@ export class DiscourseDataSource extends DataSourceApi<MyQuery, DiscourseDataSou
 
   async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {
     const { range } = options;
-    const from = range!.from.valueOf();
-    const to = range!.to.valueOf();
+    const from = range!.from.format('YYYY-MM-DD');
+    const to = range!.to.format('YYYY-MM-DD');
+
+    const data: DataQueryResponseData[] = [];
 
     // Return a constant for each query.
-    const data = options.targets.map(target => {
+    for (const target of options.targets) {
       const query = defaults(target, defaultQuery);
-      return new MutableDataFrame({
+
+      const result = await this.apiGet(`admin/${query.type}/${query.reportName}?start_date=${from}&end_date=${to}`);
+
+      const frame = new MutableDataFrame({
         refId: query.refId,
         fields: [
-          { name: 'Time', values: [from, to], type: FieldType.time },
-          { name: 'Value', values: [query.constant, query.constant], type: FieldType.number },
+          { name: 'time', type: FieldType.time },
+          { name: 'value', type: FieldType.number },
         ],
       });
-    });
+
+      for (const val of result.data.report.data) {
+        frame.add({ time: dateTimeParse(val.x).valueOf(), value: val.y });
+      }
+
+      data.push(frame);
+    }
 
     return { data };
   }

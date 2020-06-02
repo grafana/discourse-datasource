@@ -1,18 +1,20 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface MyQuery extends DataQuery {
-  queryText?: string;
-  constant: number;
+  type: string;
+  reportName: string;
 }
 
 export const defaultQuery: Partial<MyQuery> = {
-  constant: 6.5,
+  type: 'reports',
+  reportName: 'topics_with_no_response.json',
 };
 
 /**
  * These are options configured for each DataSource instance
  */
 export interface DiscourseDataSourceOptions extends DataSourceJsonData {
+  url?: string;
   username?: string;
 }
 
