@@ -9,7 +9,9 @@
       "name": "Daniel Lee",
       "url": "grafana.com"
     },
-    "keywords": ["discourse"],
+    "keywords": [
+      "discourse"
+    ],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
@@ -32,10 +34,16 @@
     {
       "path": "discourse",
       "method": "GET",
-      "url": "https://community.grafana.com/",
+      "url": "{{.JsonData.url}}",
       "headers": [
-        { "name": "Api-Username", "content": "{{.JsonData.username}}" },
-        { "name": "Api-Key", "content": "{{.SecureJsonData.apiKey}}" }
+        {
+          "name": "Api-Username",
+          "content": "{{.JsonData.username}}"
+        },
+        {
+          "name": "Api-Key",
+          "content": "{{.SecureJsonData.apiKey}}"
+        }
       ]
     }
   ],

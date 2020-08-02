@@ -10,6 +10,15 @@ interface Props extends DataSourcePluginOptionsEditorProps<DiscourseDataSourceOp
 interface State {}
 
 export class ConfigEditor extends PureComponent<Props, State> {
+  onURLChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { onOptionsChange, options } = this.props;
+    const jsonData = {
+      ...options.jsonData,
+      url: event.target.value,
+    };
+    onOptionsChange({ ...options, jsonData });
+  };
+
   onUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
@@ -19,7 +28,6 @@ export class ConfigEditor extends PureComponent<Props, State> {
     onOptionsChange({ ...options, jsonData });
   };
 
-  // Secure field (only sent to the backend)
   onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     onOptionsChange({
@@ -54,12 +62,23 @@ export class ConfigEditor extends PureComponent<Props, State> {
       <div className="gf-form-group">
         <div className="gf-form">
           <FormField
+            label="URL"
+            labelWidth={6}
+            inputWidth={20}
+            onChange={this.onURLChange}
+            value={jsonData.url || ''}
+            placeholder="https://community.xxx.com/"
+          />
+        </div>
+
+        <div className="gf-form">
+          <FormField
             label="Username"
             labelWidth={6}
             inputWidth={20}
             onChange={this.onUsernameChange}
             value={jsonData.username || ''}
-            placeholder="json field returned to frontend"
+            placeholder="Discourse username"
           />
         </div>
 
@@ -69,7 +88,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
               isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
               value={secureJsonData.apiKey || ''}
               label="API Key"
-              placeholder="secure json field (backend only)"
+              placeholder="Discourse API key"
               labelWidth={6}
               inputWidth={20}
               onReset={this.onResetAPIKey}

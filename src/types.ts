@@ -1,12 +1,10 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
-export interface MyQuery extends DataQuery {
-  type: string;
+export interface DiscourseQuery extends DataQuery {
   reportName: string;
 }
 
-export const defaultQuery: Partial<MyQuery> = {
-  type: 'reports',
+export const defaultQuery: Partial<DiscourseQuery> = {
   reportName: 'topics_with_no_response.json',
 };
 
@@ -23,4 +21,16 @@ export interface DiscourseDataSourceOptions extends DataSourceJsonData {
  */
 export interface DiscourseSecureJsonData {
   apiKey?: string;
+}
+
+//Discourse API types
+export interface DiscourseReports {
+  reports: DiscourseReportType[];
+}
+
+export interface DiscourseReportType {
+  type: string;
+  title: string;
+  description: string;
+  description_link?: string;
 }

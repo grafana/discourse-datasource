@@ -1,8 +1,9 @@
 import { DiscourseDataSource } from './DataSource';
-import { DiscourseDataSourceOptions, MyQuery } from './types';
+import { DiscourseDataSourceOptions, DiscourseQuery } from './types';
 import { DataQueryRequest, DataSourceInstanceSettings, PluginMeta, toUtc } from '@grafana/data';
 import { BackendSrv, BackendSrvRequest, setBackendSrv } from '@grafana/runtime';
 import { topicsWithNoResponse } from './testdata/topics_with_no_response';
+import { consolidatedPageViews } from './testdata/consolidated_page_views';
 
 describe('DiscourseDatasource', () => {
   const instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions> = {
@@ -56,7 +57,7 @@ describe('DiscourseDatasource', () => {
   });
 
   describe('query', () => {
-    describe('', () => {
+    describe('with a Discourse API response that returns a single time series', () => {
       beforeEach(() => {
         setupBackendSrv({
           url:
@@ -65,7 +66,7 @@ describe('DiscourseDatasource', () => {
         });
       });
 
-      it('should return data frames', async () => {
+      it('should be parsed into data frames', async () => {
         const options = {
           range: {
             from: toUtc('2020-03-15T20:00:00Z'),
@@ -75,17 +76,64 @@ describe('DiscourseDatasource', () => {
             from: 'now-4h',
             to: 'now',
           },
-          targets: [{ type: 'reports', reportName: 'topics_with_no_response.json' }],
-        } as DataQueryRequest<MyQuery>;
+          targets: [{ reportName: 'topics_with_no_response.json' }],
+        } as DataQueryRequest<DiscourseQuery>;
 
         const result = await ds.query(options);
         expect(result.data[0].fields[0].name).toBe('time');
         expect(result.data[0].fields[1].name).toBe('value');
+        expect(result.data[0].fields[1].config.displayName).toBe('Topics with no response');
 
         expect(result.data[0].fields[0].values.get(0)).toBe(1588284000000);
         expect(result.data[0].fields[1].values.get(0)).toBe(15);
         expect(result.data[0].fields[0].values.get(1)).toBe(1588370400000);
         expect(result.data[0].fields[1].values.get(1)).toBe(9);
+      });
+    });
+
+    describe('with a Discourse API response that returns multiple time series', () => {
+      beforeEach(() => {
+        setupBackendSrv({
+          url:
+            '/api/datasources/proxy/1/discourse/admin/reports/consolidated_page_views.json?start_date=2020-07-01&end_date=2020-07-31',
+          response: consolidatedPageViews,
+        });
+      });
+
+      it('should be parsed into data frames', async () => {
+        const options = {
+          range: {
+            from: toUtc('2020-07-01T00:00:00Z'),
+            to: toUtc('2020-07-31T23:59:00Z'),
+          },
+          rangeRaw: {
+            from: 'now-4h',
+            to: 'now',
+          },
+          targets: [{ reportName: 'consolidated_page_views.json' }],
+        } as DataQueryRequest<DiscourseQuery>;
+
+        const result = await ds.query(options);
+        expect(result.data[0].fields[0].name).toBe('time');
+        expect(result.data[0].fields[1].name).toBe('value');
+
+        expect(result.data[0].fields[1].config.displayName).toBe('Logged in users');
+        expect(result.data[0].fields[0].values.get(0)).toBe(1593554400000);
+        expect(result.data[0].fields[1].values.get(0)).toBe(1815);
+        expect(result.data[0].fields[0].values.get(1)).toBe(1593640800000);
+        expect(result.data[0].fields[1].values.get(1)).toBe(1654);
+
+        expect(result.data[1].fields[1].config.displayName).toBe('Anonymous users');
+        expect(result.data[1].fields[0].values.get(0)).toBe(1593554400000);
+        expect(result.data[1].fields[1].values.get(0)).toBe(23976);
+        expect(result.data[1].fields[0].values.get(1)).toBe(1593640800000);
+        expect(result.data[1].fields[1].values.get(1)).toBe(23847);
+
+        expect(result.data[2].fields[1].config.displayName).toBe('Crawlers');
+        expect(result.data[2].fields[0].values.get(0)).toBe(1593554400000);
+        expect(result.data[2].fields[1].values.get(0)).toBe(10764);
+        expect(result.data[2].fields[0].values.get(1)).toBe(1593640800000);
+        expect(result.data[2].fields[1].values.get(1)).toBe(9104);
       });
     });
   });

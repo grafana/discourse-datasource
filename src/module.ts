@@ -2,9 +2,9 @@ import { DataSourcePlugin } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { ConfigEditor } from './ConfigEditor';
 import { QueryEditor } from './QueryEditor';
-import { MyQuery, DiscourseDataSourceOptions } from './types';
+import { DiscourseQuery, DiscourseDataSourceOptions } from './types';
 
-export const plugin = new DataSourcePlugin<DiscourseDataSource, MyQuery, DiscourseDataSourceOptions>(
+export const plugin = new DataSourcePlugin<DiscourseDataSource, DiscourseQuery, DiscourseDataSourceOptions>(
   DiscourseDataSource
 )
   .setConfigEditor(ConfigEditor)

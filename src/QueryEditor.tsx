@@ -1,42 +1,56 @@
 import defaults from 'lodash/defaults';
 
-import React, { ChangeEvent, PureComponent } from 'react';
-import { LegacyForms } from '@grafana/ui';
-import { QueryEditorProps } from '@grafana/data';
+import React, { PureComponent } from 'react';
+import { InlineFormLabel, Select } from '@grafana/ui';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
-import { defaultQuery, DiscourseDataSourceOptions, MyQuery } from './types';
+import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery } from './types';
 
-const { FormField } = LegacyForms;
+interface State {
+  reportOptions: Array<SelectableValue<string>>;
+}
+type Props = QueryEditorProps<DiscourseDataSource, DiscourseQuery, DiscourseDataSourceOptions>;
 
-type Props = QueryEditorProps<DiscourseDataSource, MyQuery, DiscourseDataSourceOptions>;
-
-export class QueryEditor extends PureComponent<Props> {
-  onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query } = this.props;
-    onChange({ ...query, reportName: event.target.value });
+export class QueryEditor extends PureComponent<Props, State> {
+  state: State = {
+    reportOptions: [],
   };
 
-  onConstantChange = (event: ChangeEvent<HTMLInputElement>) => {
+  onReportChange = (reportName: string) => {
     const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, type: event.target.value });
+    onChange({ ...query, reportName: reportName });
+
     // executes the query
     onRunQuery();
   };
 
+  async componentDidMount() {
+    try {
+      const reportOptions = await this.props.datasource.getReportTypes();
+      this.setState({ reportOptions: reportOptions });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   render() {
     const query = defaults(this.props.query, defaultQuery);
-    const { type, reportName } = query;
+    const { reportName } = query;
 
     return (
       <div className="gf-form">
-        <FormField width={4} value={type} onChange={this.onConstantChange} label="Type" type="string" step="0.1" />
-        <FormField
-          labelWidth={8}
-          value={reportName || ''}
-          onChange={this.onQueryTextChange}
-          label="Report"
-          tooltip="Not used yet"
-        />
+        <div className="gf-form">
+          <InlineFormLabel className="query-keyword" width={12}>
+            Report Type
+          </InlineFormLabel>
+          <Select
+            options={this.state.reportOptions}
+            value={this.state.reportOptions.find(ro => ro.value === reportName)}
+            onChange={report => {
+              this.onReportChange(report.value || '');
+            }}
+          />
+        </div>
       </div>
     );
   }
