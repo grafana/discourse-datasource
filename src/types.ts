@@ -1,12 +1,24 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface DiscourseQuery extends DataQuery {
-  reportName: string;
+  queryType: string;
+  reportName?: string;
+
+  userQuery?: string;
+  period?: string;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
+  queryType: 'report',
   reportName: 'topics_with_no_response.json',
+  userQuery: 'topPublicUsers',
+  period: 'monthly',
 };
+
+export enum QueryType {
+  Report = 'report',
+  User = 'user',
+}
 
 /**
  * These are options configured for each DataSource instance
