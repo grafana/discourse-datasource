@@ -3,6 +3,13 @@
   "name": "Discourse Datasource",
   "id": "grafana-discourse-datasource",
   "metrics": true,
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Topics and replies",
+      "path": "dashboards/topics.json"
+    }
+  ],
   "info": {
     "description": "Data source for the hosted Discourse forum software",
     "author": {
