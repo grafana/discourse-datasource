@@ -1,0 +1,61 @@
+{
+  "type": "datasource",
+  "name": "Discourse Datasource",
+  "id": "grafana-discourse-datasource",
+  "metrics": true,
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Topics and replies",
+      "path": "dashboards/topics.json"
+    }
+  ],
+  "info": {
+    "description": "Data source for the hosted Discourse forum software",
+    "author": {
+      "name": "Daniel Lee",
+      "url": "grafana.com"
+    },
+    "keywords": [
+      "discourse"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/simple-datasource"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/simple-datasource/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "1.0.0",
+    "updated": "2020-08-04"
+  },
+  "routes": [
+    {
+      "path": "discourse",
+      "method": "GET",
+      "url": "{{.JsonData.url}}",
+      "headers": [
+        {
+          "name": "Api-Username",
+          "content": "{{.JsonData.username}}"
+        },
+        {
+          "name": "Api-Key",
+          "content": "{{.SecureJsonData.apiKey}}"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.5.x",
+    "plugins": []
+  }
+}
