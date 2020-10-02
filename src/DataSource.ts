@@ -88,7 +88,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
         });
 
         for (const val of s.data) {
-          frame.add({ time: dateTimeParse(val.x).valueOf(), value: val.y ?? 0 });
+          frame.add({ time: dateTimeParse(val.x).utc().valueOf(), value: val.y ?? 0 });
         }
 
         data.push(frame);
