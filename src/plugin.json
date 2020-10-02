@@ -13,8 +13,8 @@
   "info": {
     "description": "Data source for the hosted Discourse forum software",
     "author": {
-      "name": "Daniel Lee",
-      "url": "grafana.com"
+      "name": "Grafana Labs",
+      "url": "https://grafana.com"
     },
     "keywords": [
       "discourse"
@@ -26,11 +26,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/grafana/simple-datasource"
+        "url": "https://github.com/grafana/discourse-datasource"
       },
       {
         "name": "License",
-        "url": "https://github.com/grafana/simple-datasource/blob/master/LICENSE"
+        "url": "https://github.com/grafana/discourse-datasource/blob/master/LICENSE"
       }
     ],
     "screenshots": [],
@@ -55,7 +55,7 @@
     }
   ],
   "dependencies": {
-    "grafanaVersion": "6.5.x",
+    "grafanaDependency": "7.0.0",
     "plugins": []
   }
 }
