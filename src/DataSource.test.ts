@@ -86,9 +86,9 @@ describe('DiscourseDatasource', () => {
           expect(result.data[0].fields[1].name).toBe('value');
           expect(result.data[0].fields[1].config.displayName).toBe('Topics with no response');
 
-          expect(result.data[0].fields[0].values.get(0)).toBe(1588284000000);
+          expect(result.data[0].fields[0].values.get(0)).toBe(1588291200000);
           expect(result.data[0].fields[1].values.get(0)).toBe(15);
-          expect(result.data[0].fields[0].values.get(1)).toBe(1588370400000);
+          expect(result.data[0].fields[0].values.get(1)).toBe(1588377600000);
           expect(result.data[0].fields[1].values.get(1)).toBe(9);
         });
       });
@@ -120,21 +120,21 @@ describe('DiscourseDatasource', () => {
           expect(result.data[0].fields[1].name).toBe('value');
 
           expect(result.data[0].fields[1].config.displayName).toBe('Logged in users');
-          expect(result.data[0].fields[0].values.get(0)).toBe(1593554400000);
+          expect(result.data[0].fields[0].values.get(0)).toBe(1593561600000);
           expect(result.data[0].fields[1].values.get(0)).toBe(1815);
-          expect(result.data[0].fields[0].values.get(1)).toBe(1593640800000);
+          expect(result.data[0].fields[0].values.get(1)).toBe(1593648000000);
           expect(result.data[0].fields[1].values.get(1)).toBe(1654);
 
           expect(result.data[1].fields[1].config.displayName).toBe('Anonymous users');
-          expect(result.data[1].fields[0].values.get(0)).toBe(1593554400000);
+          expect(result.data[1].fields[0].values.get(0)).toBe(1593561600000);
           expect(result.data[1].fields[1].values.get(0)).toBe(23976);
-          expect(result.data[1].fields[0].values.get(1)).toBe(1593640800000);
+          expect(result.data[1].fields[0].values.get(1)).toBe(1593648000000);
           expect(result.data[1].fields[1].values.get(1)).toBe(23847);
 
           expect(result.data[2].fields[1].config.displayName).toBe('Crawlers');
-          expect(result.data[2].fields[0].values.get(0)).toBe(1593554400000);
+          expect(result.data[2].fields[0].values.get(0)).toBe(1593561600000);
           expect(result.data[2].fields[1].values.get(0)).toBe(10764);
-          expect(result.data[2].fields[0].values.get(1)).toBe(1593640800000);
+          expect(result.data[2].fields[0].values.get(1)).toBe(1593648000000);
           expect(result.data[2].fields[1].values.get(1)).toBe(9104);
         });
       });

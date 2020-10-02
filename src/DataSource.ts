@@ -89,9 +89,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
         for (const val of s.data) {
           frame.add({
-            time: dateTimeParse(val.x)
-              .utc()
-              .valueOf(),
+            time: dateTimeParse(val.x, { timeZone: 'utc' }).valueOf(),
             value: val.y ?? 0,
           });
         }
