@@ -16,9 +16,7 @@
       "name": "Grafana Labs",
       "url": "https://grafana.com"
     },
-    "keywords": [
-      "discourse"
-    ],
+    "keywords": ["discourse"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
@@ -33,7 +31,16 @@
         "url": "https://github.com/grafana/discourse-datasource/blob/master/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Topics dashboard",
+        "path": "img/topics-dashboard.png"
+      },
+      {
+        "name": "Query editor",
+        "path": "img/topics-query-editor.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
