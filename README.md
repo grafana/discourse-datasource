@@ -41,12 +41,20 @@ There are two user queries - the Top Public Users query and the Staff query. Thi
 
 The statistics for topics from the [Grafana Community site](https://play.grafana.org/d/aMaVTeVGz/community-site-topics-and-replies?tab=transform&editPanel=2&orgId=1) is a more advanced example of what you can do with transformations.
 
-The goal is to take two queries, total the results over a time period and then subtract one from the other and we will use the transformations feature in Grafana to achieve this.
+The goal is to take two queries, total the results over a time period and then subtract one from the other and we will use the [transformations](https://grafana.com/docs/grafana/latest/panels/transformations/) feature in Grafana to achieve this.
 
 1. Start with two queries - Topics and Topics with no replies and choose the Stat visualization. In the Panel options, change the `Calculation` to `Total` and change the `Orientation` to `Horizontal`.
 2. Switch to the transformations tab and add two `Add field from calculation` transformations and reduce the two fields, `Topics` and `Topics with no replies`. We do this in case we have any gaps in the data to avoid NaN errors. Use the `Reduce row` mode and choose the `Total` calculation. Choose an appropriate alias for each. You should now see four stats, the two original fields and the two reduced fields.
+
+   ![ad_hoc_filter](https://raw.githubusercontent.com/grafana/discourse-datasource/master/src/img/transformations-tworeduce.png)
+
 3. Add a third `Add field from calculation` transformation and choose `Binary operation` as `Mode`. For the maths operation, choose your two reduced fields and the minus operation.
+
+   ![ad_hoc_filter](https://raw.githubusercontent.com/grafana/discourse-datasource/master/src/img/transformations-binaryop.png)
+
 4. Now you should have five stats and we only want to show three and hide the calculated fields. Hide the fields you don't want to show by adding a `Organize fields` transformation.
+
+   ![ad_hoc_filter](https://raw.githubusercontent.com/grafana/discourse-datasource/master/src/img/transformations-organize.png)
 
 ## Developer Guide
 
