@@ -97,8 +97,8 @@ export class QueryEditor extends PureComponent<Props, State> {
           <Select
             width={12}
             options={queryTypeOptions}
-            value={queryTypeOptions.find(ro => ro.value === queryType)}
-            onChange={q => {
+            value={queryTypeOptions.find((ro) => ro.value === queryType)}
+            onChange={(q) => {
               this.onQueryTypeChange(q.value || defaultQuery.queryType || QueryType.Report);
             }}
           />
@@ -111,8 +111,8 @@ export class QueryEditor extends PureComponent<Props, State> {
             <Select
               width={30}
               options={this.state.reportOptions}
-              value={this.state.reportOptions.find(ro => ro.value === reportName)}
-              onChange={report => {
+              value={this.state.reportOptions.find((ro) => ro.value === reportName)}
+              onChange={(report) => {
                 this.onReportChange(report.value || defaultQuery.reportName || '');
               }}
             />
@@ -126,8 +126,8 @@ export class QueryEditor extends PureComponent<Props, State> {
             <Select
               width={20}
               options={userQueryOptions}
-              value={userQueryOptions.find(o => o.value === userQuery)}
-              onChange={q => {
+              value={userQueryOptions.find((o) => o.value === userQuery)}
+              onChange={(q) => {
                 this.onUserQueryChange(q.value);
               }}
             />
@@ -141,8 +141,8 @@ export class QueryEditor extends PureComponent<Props, State> {
             <Select
               width={12}
               options={periodOptions}
-              value={periodOptions.find(po => po.value === period)}
-              onChange={p => {
+              value={periodOptions.find((po) => po.value === period)}
+              onChange={(p) => {
                 this.onPeriodChange(p.value);
               }}
             />
