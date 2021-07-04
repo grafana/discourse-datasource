@@ -1,6 +1,6 @@
 # Grafana Discourse data source
 
-[![CircleCI](https://circleci.com/gh/grafana/discourse-datasource/tree/master.svg?style=svg)](https://circleci.com/gh/grafana/discourse-datasource/tree/master)
+![GitHub Actions CI](https://github.com/grafana/discourse-datasource/actions/workflows/ci.yml/badge.svg)
 
 View report data and user data from a hosted Discourse instance in your Grafana.
 
