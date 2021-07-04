@@ -1,5 +1,6 @@
 # Grafana Discourse data source
 
+[![License](https://img.shields.io/github/license/grafana/discourse-datasource)](LICENSE)
 ![GitHub Actions CI](https://github.com/grafana/discourse-datasource/actions/workflows/ci.yml/badge.svg)
 
 View report data and user data from a hosted Discourse instance in your Grafana.
