@@ -62,7 +62,7 @@
     }
   ],
   "dependencies": {
-    "grafanaDependency": "7.0.0",
+    "grafanaDependency": "7.x || 8.x",
     "plugins": []
   }
 }

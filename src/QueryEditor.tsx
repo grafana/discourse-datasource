@@ -8,6 +8,7 @@ import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } f
 
 interface State {
   reportOptions: Array<SelectableValue<string>>;
+  categoryOptions: Array<SelectableValue<string>>;
 }
 type Props = QueryEditorProps<DiscourseDataSource, DiscourseQuery, DiscourseDataSourceOptions>;
 
@@ -33,11 +34,20 @@ const periodOptions = [
 export class QueryEditor extends PureComponent<Props, State> {
   state: State = {
     reportOptions: [],
+    categoryOptions: [],
   };
 
   onReportChange = (reportName: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, reportName: reportName });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onCategoryChange = (category: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, category: category });
 
     // executes the query
     onRunQuery();
@@ -78,7 +88,8 @@ export class QueryEditor extends PureComponent<Props, State> {
   async componentDidMount() {
     try {
       const reportOptions = await this.props.datasource.getReportTypes();
-      this.setState({ reportOptions: reportOptions });
+      const categoryOptions = await this.props.datasource.getCategories();
+      this.setState({ reportOptions: reportOptions, categoryOptions: categoryOptions });
     } catch (error) {
       console.log(error);
     }
@@ -86,7 +97,7 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   render() {
     const query = defaults(this.props.query, defaultQuery);
-    const { queryType, reportName, userQuery, period } = query;
+    const { queryType, reportName, userQuery, period, category } = query;
 
     return (
       <HorizontalGroup>
@@ -114,6 +125,17 @@ export class QueryEditor extends PureComponent<Props, State> {
               value={this.state.reportOptions.find((ro) => ro.value === reportName)}
               onChange={(report) => {
                 this.onReportChange(report.value || defaultQuery.reportName || '');
+              }}
+            />
+            <InlineFormLabel className="query-keyword" width={7}>
+              Category
+            </InlineFormLabel>
+            <Select
+              width={30}
+              options={this.state.categoryOptions}
+              value={this.state.categoryOptions.find((co) => co.value === category)}
+              onChange={(category) => {
+                this.onCategoryChange(category.value || defaultQuery.category || '');
               }}
             />
           </div>

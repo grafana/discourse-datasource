@@ -3,8 +3,11 @@ import { DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
 import { DataQueryRequest, DataSourceInstanceSettings, PluginMeta, toUtc } from '@grafana/data';
 import { BackendSrv, BackendSrvRequest, setBackendSrv } from '@grafana/runtime';
 import { topicsWithNoResponse } from './testdata/topics_with_no_response';
-import { consolidatedPageViews } from './testdata/consolidated_page_views';
+import { topicsWithNoResponseFromBulkApi } from './testdata/topics_with_no_response_bulk';
+import { consolidatedPageViewsFromBulkApi } from './testdata/consolidated_page_views_bulk';
 import { topPublicUsers } from './testdata/top_public_users';
+import { categories } from './testdata/categories';
+import { reports } from './testdata/reports';
 
 describe('DiscourseDatasource', () => {
   const instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions> = {
@@ -57,14 +60,54 @@ describe('DiscourseDatasource', () => {
     });
   });
 
+  describe('query for metadata', () => {
+    describe('for a category list', () => {
+      beforeEach(() => {
+        setupBackendSrv({
+          url: '/api/datasources/proxy/1/discourse/categories.json',
+          response: categories,
+        });
+      });
+
+      it('should return a list of top level categories', async () => {
+        const result = await ds.getCategories();
+        expect(result.length).toBe(13);
+        expect(result[0].label).toBe('All categories');
+        expect(result[0].value).toBe('All categories');
+        expect(result[1].label).toBe('Grafana Support');
+        expect(result[1].value).toBe('33');
+        expect(result[2].label).toBe('Grafana Loki');
+        expect(result[2].value).toBe('41');
+      });
+    });
+
+    describe('for a report list', () => {
+      beforeEach(() => {
+        setupBackendSrv({
+          url: '/api/datasources/proxy/1/discourse/admin/reports.json',
+          response: reports,
+        });
+      });
+
+      it('should return a list of report types', async () => {
+        const result = await ds.getReportTypes();
+        expect(result.length).toBe(43);
+        expect(result[0].label).toBe('Accepted solutions');
+        expect(result[0].value).toBe('accepted_solutions.json');
+        expect(result[1].label).toBe('Admin Logins');
+        expect(result[1].value).toBe('staff_logins.json');
+      });
+    });
+  });
+
   describe('query', () => {
     describe('for a report', () => {
       describe('with a Discourse API response that returns a single time series', () => {
         beforeEach(() => {
           setupBackendSrv({
             url:
-              '/api/datasources/proxy/1/discourse/admin/reports/topics_with_no_response.json?start_date=2020-03-15&end_date=2020-03-22',
-            response: topicsWithNoResponse,
+              '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[topics_with_no_response][start_date]=2020-03-15&reports[topics_with_no_response][end_date]=2020-03-22',
+            response: topicsWithNoResponseFromBulkApi,
           });
         });
 
@@ -86,10 +129,10 @@ describe('DiscourseDatasource', () => {
           expect(result.data[0].fields[1].name).toBe('value');
           expect(result.data[0].fields[1].config.displayName).toBe('Topics with no response');
 
-          expect(result.data[0].fields[0].values.get(0)).toBe(1588291200000);
-          expect(result.data[0].fields[1].values.get(0)).toBe(15);
-          expect(result.data[0].fields[0].values.get(1)).toBe(1588377600000);
-          expect(result.data[0].fields[1].values.get(1)).toBe(9);
+          expect(result.data[0].fields[0].values.get(0)).toBe(1622505600000);
+          expect(result.data[0].fields[1].values.get(0)).toBe(5);
+          expect(result.data[0].fields[0].values.get(1)).toBe(1622592000000);
+          expect(result.data[0].fields[1].values.get(1)).toBe(7);
         });
       });
 
@@ -97,8 +140,8 @@ describe('DiscourseDatasource', () => {
         beforeEach(() => {
           setupBackendSrv({
             url:
-              '/api/datasources/proxy/1/discourse/admin/reports/consolidated_page_views.json?start_date=2020-07-01&end_date=2020-07-31',
-            response: consolidatedPageViews,
+              '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[consolidated_page_views][start_date]=2020-07-01&reports[consolidated_page_views][end_date]=2020-07-31',
+            response: consolidatedPageViewsFromBulkApi,
           });
         });
 
@@ -120,22 +163,22 @@ describe('DiscourseDatasource', () => {
           expect(result.data[0].fields[1].name).toBe('value');
 
           expect(result.data[0].fields[1].config.displayName).toBe('Logged in users');
-          expect(result.data[0].fields[0].values.get(0)).toBe(1593561600000);
-          expect(result.data[0].fields[1].values.get(0)).toBe(1815);
-          expect(result.data[0].fields[0].values.get(1)).toBe(1593648000000);
-          expect(result.data[0].fields[1].values.get(1)).toBe(1654);
+          expect(result.data[0].fields[0].values.get(0)).toBe(1622505600000);
+          expect(result.data[0].fields[1].values.get(0)).toBe(2071);
+          expect(result.data[0].fields[0].values.get(1)).toBe(1622592000000);
+          expect(result.data[0].fields[1].values.get(1)).toBe(2249);
 
           expect(result.data[1].fields[1].config.displayName).toBe('Anonymous users');
-          expect(result.data[1].fields[0].values.get(0)).toBe(1593561600000);
-          expect(result.data[1].fields[1].values.get(0)).toBe(23976);
-          expect(result.data[1].fields[0].values.get(1)).toBe(1593648000000);
-          expect(result.data[1].fields[1].values.get(1)).toBe(23847);
+          expect(result.data[1].fields[0].values.get(0)).toBe(1622505600000);
+          expect(result.data[1].fields[1].values.get(0)).toBe(25254);
+          expect(result.data[1].fields[0].values.get(1)).toBe(1622592000000);
+          expect(result.data[1].fields[1].values.get(1)).toBe(27250);
 
           expect(result.data[2].fields[1].config.displayName).toBe('Crawlers');
-          expect(result.data[2].fields[0].values.get(0)).toBe(1593561600000);
-          expect(result.data[2].fields[1].values.get(0)).toBe(10764);
-          expect(result.data[2].fields[0].values.get(1)).toBe(1593648000000);
-          expect(result.data[2].fields[1].values.get(1)).toBe(9104);
+          expect(result.data[2].fields[0].values.get(0)).toBe(1622505600000);
+          expect(result.data[2].fields[1].values.get(0)).toBe(28954);
+          expect(result.data[2].fields[0].values.get(1)).toBe(1622592000000);
+          expect(result.data[2].fields[1].values.get(1)).toBe(7989);
         });
       });
     });

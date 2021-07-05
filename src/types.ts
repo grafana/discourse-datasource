@@ -6,6 +6,7 @@ export interface DiscourseQuery extends DataQuery {
 
   userQuery?: string;
   period?: string;
+  category?: string;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
@@ -13,6 +14,7 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   reportName: 'topics_with_no_response.json',
   userQuery: 'topPublicUsers',
   period: 'monthly',
+  category: 'All categories',
 };
 
 export enum QueryType {
@@ -46,3 +48,56 @@ export interface DiscourseReportType {
   description: string;
   description_link?: string;
 }
+
+export interface DiscourseCategories {
+  category_list: {
+    categories: DiscourseCategory[];
+  };
+}
+
+export interface DiscourseCategory {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface DiscourseBulkReports {
+  reports: DiscourseBulkReport[];
+}
+
+export interface DiscourseBulkReport {
+  type: string;
+  title: string;
+  description: string;
+  description_link?: string;
+  data: DiscourseReportData[] | DiscourseReportMultipleData[];
+  start_date: string;
+  end_date: string;
+  report_key: string;
+  limit: number;
+  total: number;
+  average: boolean;
+  percent: boolean;
+  labels: DiscourseReportLabel[];
+}
+
+export interface DiscourseReportLabel {
+  type: string;
+  property: string;
+  title: string;
+}
+
+export interface DiscourseReportMultipleData {
+  req: string;
+  label: string;
+  data: DiscourseReportData[];
+}
+
+export const isDiscourseReportMultipleData = (data: any): data is DiscourseReportMultipleData =>
+  data && data.hasOwnProperty('req');
+export interface DiscourseReportData {
+  x: string;
+  y: number;
+}
+
+export const isDiscourseReportData = (data: any): data is DiscourseReportData => data && data.hasOwnProperty('x');
