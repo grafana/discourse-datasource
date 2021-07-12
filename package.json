@@ -1,6 +1,6 @@
 {
   "name": "grafana-discourse-datasource",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Data source for the hosted Discourse forum software",
   "scripts": {
     "build": "grafana-toolkit plugin:build",
