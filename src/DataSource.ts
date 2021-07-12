@@ -16,7 +16,19 @@ import {
 
 import flatten from './flatten';
 
-import { DiscourseQuery, DiscourseDataSourceOptions, defaultQuery, DiscourseReports, QueryType } from './types';
+import {
+  DiscourseQuery,
+  DiscourseDataSourceOptions,
+  defaultQuery,
+  DiscourseReports,
+  QueryType,
+  DiscourseCategories,
+  DiscourseBulkReports,
+  DiscourseReportMultipleData,
+  DiscourseReportData,
+  isDiscourseReportMultipleData,
+  isDiscourseReportData,
+} from './types';
 
 export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, DiscourseDataSourceOptions> {
   constructor(private instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions>) {
@@ -64,42 +76,52 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
   }
 
   private async executeReportQuery(query: DiscourseQuery, from: string, to: string, data: any[]) {
-    const result = await this.apiGet(`admin/reports/${query.reportName}?start_date=${from}&end_date=${to}`);
+    //strip the .json from the end
+    const reportName = query.reportName?.substring(0, query.reportName.length - 5);
+    const limit = 1000;
 
-    let series = result.data.report.data.filter((d: any) => d.data);
-    if (series.length === 0) {
-      series = [result.data.report];
+    let filter = `reports[${reportName}][start_date]=${from}&reports[${reportName}][end_date]=${to}&reports[${reportName}][limit]=${limit}`;
+
+    if (query.category && query.category !== 'All categories') {
+      filter += `&reports[${reportName}][filters][category]=${query.category}&reports[${reportName}][filters][include_subcategories]=true`;
     }
 
-    //If single time series, then use the report title for the series alias
-    let displayName;
-    if (result?.data?.report?.data?.length > 0 && !result.data.report.data[0].data) {
-      displayName = result?.data?.report?.title;
-    }
+    const requestUrl = `admin/reports/bulk.json?${filter}`;
+
+    const result = await this.apiGet(requestUrl);
+
+    const reports = (result.data as DiscourseBulkReports).reports;
+    let series = reports.filter((d: any) => d.data);
+    const defaultReportTitle = reports.length > 0 ? reports[0].title : '';
 
     for (const s of series) {
-      if (s.data.length > 0 && s.data[0].x && s.data[0].y) {
-        const frame = new MutableDataFrame({
-          refId: query.refId,
-          fields: [
-            { name: 'time', type: FieldType.time },
-            { name: 'value', type: FieldType.number, config: { displayName: displayName ?? s.label } },
-          ],
-        });
-
-        for (const val of s.data) {
-          frame.add({
-            time: dateTimeParse(val.x, { timeZone: 'utc' }).valueOf(),
-            value: val.y ?? 0,
-          });
+      if (s.data?.length > 0 && isDiscourseReportMultipleData(s.data[0])) {
+        for (const d of s.data as DiscourseReportMultipleData[]) {
+          this.convertToDataFrame(query, d.data, d.label ?? defaultReportTitle, data);
         }
-
-        data.push(frame);
-      } else if (s.data.length > 0) {
-        const frame = toDataFrame(s.data);
-        data.push(frame);
+      } else if (s.data?.length > 0 && isDiscourseReportData(s.data[0])) {
+        this.convertToDataFrame(query, s.data as DiscourseReportData[], defaultReportTitle, data);
       }
     }
+  }
+
+  private convertToDataFrame(query: DiscourseQuery, d: DiscourseReportData[], displayName: string, data: any[]) {
+    const frame = new MutableDataFrame({
+      refId: query.refId,
+      fields: [
+        { name: 'time', type: FieldType.time },
+        { name: 'value', type: FieldType.number, config: { displayName: displayName } },
+      ],
+    });
+
+    for (const val of d) {
+      frame.add({
+        time: dateTimeParse(val.x, { timeZone: 'utc' }).valueOf(),
+        value: val.y ?? 0,
+      });
+    }
+
+    data.push(frame);
   }
 
   async testDatasource() {
@@ -141,6 +163,31 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
 
     return reportOptions;
+  }
+
+  async getCategories(): Promise<Array<SelectableValue<string>>> {
+    const categoryOptions: Array<SelectableValue<string>> = [];
+    categoryOptions.push({
+      label: 'All categories',
+      value: 'All categories',
+      description: '',
+    });
+
+    try {
+      const result: any = await this.apiGet('categories.json');
+
+      for (const category of (result.data as DiscourseCategories).category_list.categories) {
+        categoryOptions.push({
+          label: category.name,
+          value: category.id.toString(),
+          description: category.description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    return categoryOptions;
   }
 
   async apiGet(path: string): Promise<any> {
