@@ -106,7 +106,8 @@ describe('DiscourseDatasource', () => {
         beforeEach(() => {
           setupBackendSrv({
             url:
-              '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[topics_with_no_response][start_date]=2020-03-15&reports[topics_with_no_response][end_date]=2020-03-22',
+              '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[topics_with_no_response][start_date]=2020-03-15&reports[topics_with_no_response][end_date]=2020-03-22&reports[topics_with_no_response][limit]=1000' +
+              '&reports[topics_with_no_response][filters][category]=33&reports[topics_with_no_response][filters][include_subcategories]=true',
             response: topicsWithNoResponseFromBulkApi,
           });
         });
@@ -121,7 +122,7 @@ describe('DiscourseDatasource', () => {
               from: 'now-4h',
               to: 'now',
             },
-            targets: [{ queryType: QueryType.Report, reportName: 'topics_with_no_response.json' }],
+            targets: [{ queryType: QueryType.Report, reportName: 'topics_with_no_response.json', category: '33' }],
           } as DataQueryRequest<DiscourseQuery>;
 
           const result = await ds.query(options);
@@ -140,7 +141,7 @@ describe('DiscourseDatasource', () => {
         beforeEach(() => {
           setupBackendSrv({
             url:
-              '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[consolidated_page_views][start_date]=2020-07-01&reports[consolidated_page_views][end_date]=2020-07-31',
+              '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[consolidated_page_views][start_date]=2020-07-01&reports[consolidated_page_views][end_date]=2020-07-31&reports[consolidated_page_views][limit]=1000',
             response: consolidatedPageViewsFromBulkApi,
           });
         });

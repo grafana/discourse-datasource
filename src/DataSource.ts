@@ -76,8 +76,11 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
   }
 
   private async executeReportQuery(query: DiscourseQuery, from: string, to: string, data: any[]) {
+    //strip the .json from the end
     const reportName = query.reportName?.substring(0, query.reportName.length - 5);
-    let filter = `reports[${reportName}][start_date]=${from}&reports[${reportName}][end_date]=${to}`;
+    const limit = 1000;
+
+    let filter = `reports[${reportName}][start_date]=${from}&reports[${reportName}][end_date]=${to}&reports[${reportName}][limit]=${limit}`;
 
     if (query.category && query.category !== 'All categories') {
       filter += `&reports[${reportName}][filters][category]=${query.category}&reports[${reportName}][filters][include_subcategories]=true`;
@@ -89,14 +92,15 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
     const reports = (result.data as DiscourseBulkReports).reports;
     let series = reports.filter((d: any) => d.data);
+    const defaultReportTitle = reports.length > 0 ? reports[0].title : '';
 
     for (const s of series) {
       if (s.data?.length > 0 && isDiscourseReportMultipleData(s.data[0])) {
         for (const d of s.data as DiscourseReportMultipleData[]) {
-          this.convertToDataFrame(query, d.data, d.label ?? reports[0].title, data);
+          this.convertToDataFrame(query, d.data, d.label ?? defaultReportTitle, data);
         }
       } else if (s.data?.length > 0 && isDiscourseReportData(s.data[0])) {
-        this.convertToDataFrame(query, s.data as DiscourseReportData[], reports[0].title, data);
+        this.convertToDataFrame(query, s.data as DiscourseReportData[], defaultReportTitle, data);
       }
     }
   }
