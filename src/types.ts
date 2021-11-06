@@ -7,6 +7,8 @@ export interface DiscourseQuery extends DataQuery {
   userQuery?: string;
   period?: string;
   category?: string;
+
+  tagQuery?: string;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
@@ -20,6 +22,7 @@ export const defaultQuery: Partial<DiscourseQuery> = {
 export enum QueryType {
   Report = 'report',
   User = 'user',
+  Tag = 'tag',
 }
 
 /**
