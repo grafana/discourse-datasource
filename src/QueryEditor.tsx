@@ -15,6 +15,7 @@ type Props = QueryEditorProps<DiscourseDataSource, DiscourseQuery, DiscourseData
 const queryTypeOptions = [
   { value: QueryType.Report, label: 'Report', description: 'Discourse admin reports' },
   { value: QueryType.User, label: 'User', description: 'User statistics' },
+  { value: QueryType.Tag, label: 'Tag', description: 'Tag statistics' },
 ];
 
 const userQueryOptions = [
