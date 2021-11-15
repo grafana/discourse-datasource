@@ -9,6 +9,7 @@ export interface DiscourseQuery extends DataQuery {
   category?: string;
 
   tagQuery?: string;
+  tag?: any;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
@@ -17,12 +18,15 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   userQuery: 'topPublicUsers',
   period: 'monthly',
   category: 'All categories',
+  tagQuery: '',
+  tag: 'backend-platform'
 };
 
 export enum QueryType {
   Report = 'report',
   User = 'user',
-  Tag = 'tag',
+  Tags = 'tags',
+  Tag  = 'tag'
 }
 
 /**
@@ -50,6 +54,18 @@ export interface DiscourseReportType {
   title: string;
   description: string;
   description_link?: string;
+}
+
+export interface DiscourseTags {
+    tags: DiscourseTag[];
+}
+
+export interface DiscourseTag {
+  id: string;
+  text: string;
+  count: number;
+  pm_count: number;
+  target_tag?: any;
 }
 
 export interface DiscourseCategories {

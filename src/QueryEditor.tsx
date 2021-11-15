@@ -9,13 +9,16 @@ import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } f
 interface State {
   reportOptions: Array<SelectableValue<string>>;
   categoryOptions: Array<SelectableValue<string>>;
+  tagOptions: Array<SelectableValue<any>>;
 }
 type Props = QueryEditorProps<DiscourseDataSource, DiscourseQuery, DiscourseDataSourceOptions>;
 
 const queryTypeOptions = [
   { value: QueryType.Report, label: 'Report', description: 'Discourse admin reports' },
   { value: QueryType.User, label: 'User', description: 'User statistics' },
-  { value: QueryType.Tag, label: 'Tag', description: 'Tag statistics' },
+  { value: QueryType.Tags, label: 'Tags (overview)', description: 'shows all tags and counts' },
+  { value: QueryType.Tag, label: 'Tag (detailed)', description: 'shows detailed stats per-tag' },
+
 ];
 
 const userQueryOptions = [
@@ -36,6 +39,7 @@ export class QueryEditor extends PureComponent<Props, State> {
   state: State = {
     reportOptions: [],
     categoryOptions: [],
+    tagOptions: [],
   };
 
   onReportChange = (reportName: string) => {
@@ -86,11 +90,24 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
+  onTagChange = (tag?: any) => {
+    if (!tag) {
+      return;
+    }
+
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, tag: tag });
+
+    // executes the query
+    onRunQuery();
+  };
+
   async componentDidMount() {
     try {
       const reportOptions = await this.props.datasource.getReportTypes();
       const categoryOptions = await this.props.datasource.getCategories();
-      this.setState({ reportOptions: reportOptions, categoryOptions: categoryOptions });
+      const tagOptions = await this.props.datasource.getTags();
+      this.setState({ reportOptions: reportOptions, categoryOptions: categoryOptions, tagOptions: tagOptions });
     } catch (error) {
       console.log(error);
     }
@@ -98,7 +115,7 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   render() {
     const query = defaults(this.props.query, defaultQuery);
-    const { queryType, reportName, userQuery, period, category } = query;
+    const { queryType, reportName, userQuery, period, category, tag } = query;
 
     return (
       <HorizontalGroup>
@@ -171,6 +188,21 @@ export class QueryEditor extends PureComponent<Props, State> {
             />
           </div>
         )}
+        {queryType === QueryType.Tag && (
+          <div className="gf-form">
+            <InlineFormLabel className="query-keyword" width={7}>
+              Tags
+            </InlineFormLabel>
+            <Select
+              width={30}
+              options={this.state.tagOptions}
+              value={this.state.tagOptions.find((to) => to.value === tag)}
+              onChange={(tag) => {
+                this.onTagChange(tag.value || defaultQuery.tag || '');
+              }}
+            />
+          </div>
+          )}
       </HorizontalGroup>
     );
   }

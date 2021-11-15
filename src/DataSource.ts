@@ -21,6 +21,7 @@ import {
   DiscourseDataSourceOptions,
   defaultQuery,
   DiscourseReports,
+  DiscourseTags,
   QueryType,
   DiscourseCategories,
   DiscourseBulkReports,
@@ -53,10 +54,28 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
         await this.executeReportQuery(query, from, to, data);
       } else if (query.queryType === QueryType.User) {
         await this.executeUserQuery(query, data);
+      } else if (query.queryType === QueryType.Tag) {
+        await this.executeTagQuery(query, data);        
+      } else if (query.queryType === QueryType.Tags) {
+        await this.executeTagsQuery(query, data); 
       }
     }
     return { data };
   }
+
+  private async executeTagsQuery(query: DiscourseQuery, data: any[]) {
+      const result = await this.apiGet(`tags.json`);
+      console.log(result)
+      const frame = toDataFrame(result.data.tags);
+      data.push(frame);
+  }
+
+  private async executeTagQuery(query: DiscourseQuery, data: any[]) {
+    const result = await this.apiGet(`tag/${query.tag}.json`);
+    console.log(result)
+    const frame = toDataFrame(result.data.topic_list.topics);
+    data.push(frame);
+}
 
   private async executeUserQuery(query: DiscourseQuery, data: any[]) {
     if (query.userQuery === 'topPublicUsers') {
@@ -186,8 +205,27 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     } catch (error) {
       console.log(error);
     }
-
+    console.log(categoryOptions);
     return categoryOptions;
+  }
+
+  async getTags(): Promise<Array<SelectableValue<any>>> {
+    const tagOptions: Array<SelectableValue<any>> = [];
+
+    try {
+      const result: any = await this.apiGet('tags.json');
+
+      for (const tag of (result.data as DiscourseTags).tags) {
+        tagOptions.push({
+          label: tag.text,
+          value: tag.id.toString(),
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    return tagOptions;
   }
 
   async apiGet(path: string): Promise<any> {
