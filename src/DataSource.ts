@@ -54,28 +54,73 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
         await this.executeReportQuery(query, from, to, data);
       } else if (query.queryType === QueryType.User) {
         await this.executeUserQuery(query, data);
+      } else if (query.queryType === QueryType.Tags) {
+        await this.executeTagsQuery(query, data);        
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);        
-      } else if (query.queryType === QueryType.Tags) {
-        await this.executeTagsQuery(query, data); 
-      }
+      }    
     }
     return { data };
   }
 
   private async executeTagsQuery(query: DiscourseQuery, data: any[]) {
       const result = await this.apiGet(`tags.json`);
-      console.log(result)
       const frame = toDataFrame(result.data.tags);
       data.push(frame);
   }
 
   private async executeTagQuery(query: DiscourseQuery, data: any[]) {
-    const result = await this.apiGet(`tag/${query.tag}.json`);
-    console.log(result)
-    const frame = toDataFrame(result.data.topic_list.topics);
-    data.push(frame);
-}
+    const result           = await this.apiGet(`tag/${query.tag}.json`);
+    const first_topics     = result.data.topic_list.topics
+    const more_results_url = result.data.topic_list.more_topics_url;
+  
+    if(more_results_url !== undefined){
+      const route = "tag"
+      const paginated_topics = await this.getPaginatedTopics(query, route)
+      console.log(paginated_topics)
+      
+      const concat_results = await first_topics.concat(paginated_topics)
+      console.log(concat_results)
+      
+      const merged = toDataFrame(concat_results)
+      console.log(merged)
+      
+      data.push(merged)
+    } else {
+      data.push(first_topics)
+    }
+  }
+
+  private async getPaginatedTopics(query: any, route: string) {
+    let page: number = 1;
+    let moreResults : any[] = []
+    let currentResult: string = ""
+    do {
+      try {
+        const request = await this.apiGet(`${route}/${query.tag}.json?page=${page}`);
+        console.log(request);
+
+        const data = request.data.topic_list.topics;             
+        currentResult = request.data.topic_list.more_topics_url;
+
+        moreResults.push(data); 
+
+        console.log(moreResults);
+        console.log(currentResult);
+
+        page++;
+        console.log(page)
+      } catch (err) {
+        console.error(`Oeps, something is wrong ${err}`);
+      }
+      // keep running until there's no next page
+    } while (currentResult !== undefined);
+    console.log(currentResult);
+    console.log(page);
+
+    const flattened = moreResults.flat()
+    return flattened
+  } 
 
   private async executeUserQuery(query: DiscourseQuery, data: any[]) {
     if (query.userQuery === 'topPublicUsers') {
@@ -205,12 +250,15 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     } catch (error) {
       console.log(error);
     }
-    console.log(categoryOptions);
     return categoryOptions;
   }
 
   async getTags(): Promise<Array<SelectableValue<any>>> {
     const tagOptions: Array<SelectableValue<any>> = [];
+    tagOptions.push({
+      label: 'All tags',
+      value: 'All tags',
+    });
 
     try {
       const result: any = await this.apiGet('tags.json');
@@ -237,3 +285,4 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return result;
   }
 }
+

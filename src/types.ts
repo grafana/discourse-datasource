@@ -19,7 +19,7 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   period: 'monthly',
   category: 'All categories',
   tagQuery: '',
-  tag: 'backend-platform'
+  tag: 'observability'
 };
 
 export enum QueryType {

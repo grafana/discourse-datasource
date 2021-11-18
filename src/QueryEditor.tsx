@@ -120,11 +120,11 @@ export class QueryEditor extends PureComponent<Props, State> {
     return (
       <HorizontalGroup>
         <div className="gf-form">
-          <InlineFormLabel className="query-keyword" width={7}>
+          <InlineFormLabel className="query-keyword" width={10}>
             Query Type
           </InlineFormLabel>
           <Select
-            width={12}
+            width={25}
             options={queryTypeOptions}
             value={queryTypeOptions.find((ro) => ro.value === queryType)}
             onChange={(q) => {
