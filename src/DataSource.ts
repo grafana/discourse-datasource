@@ -55,7 +55,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       } else if (query.queryType === QueryType.User) {
         await this.executeUserQuery(query, data);
       } else if (query.queryType === QueryType.Tags) {
-        await this.executeTagsQuery(query, data);        
+        await this.executeTagsQuery(data);        
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);        
       }    
@@ -63,7 +63,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return { data };
   }
 
-  private async executeTagsQuery(query: DiscourseQuery, data: any[]) {
+  private async executeTagsQuery(data: any[]) {
       const result = await this.apiGet(`tags.json`);
       const frame = toDataFrame(result.data.tags);
       data.push(frame);
@@ -72,9 +72,9 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
   private async executeTagQuery(query: DiscourseQuery, data: any[]) {
     const result           = await this.apiGet(`tag/${query.tag}.json`);
     const first_topics     = result.data.topic_list.topics
-    const more_results_url = result.data.topic_list.more_topics_url;
+    const more_topics_url = result.data.topic_list.more_topics_url;
   
-    if(more_results_url !== undefined){
+    if(more_topics_url !== undefined){
       const route = "tag"
       const paginated_topics = await this.getPaginatedTopics(query, route)
       console.log(paginated_topics)
@@ -82,10 +82,10 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       const concat_results = await first_topics.concat(paginated_topics)
       console.log(concat_results)
       
-      const merged = toDataFrame(concat_results)
-      console.log(merged)
+      const dataFrame = toDataFrame(concat_results)
+      console.log(dataFrame)
       
-      data.push(merged)
+      data.push(dataFrame)
     } else {
       data.push(first_topics)
     }
@@ -104,19 +104,15 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
         currentResult = request.data.topic_list.more_topics_url;
 
         moreResults.push(data); 
-
         console.log(moreResults);
-        console.log(currentResult);
 
         page++;
-        console.log(page)
+        console.log(`page: ${page}`)
       } catch (err) {
         console.error(`Oeps, something is wrong ${err}`);
       }
       // keep running until there's no next page
     } while (currentResult !== undefined);
-    console.log(currentResult);
-    console.log(page);
 
     const flattened = moreResults.flat()
     return flattened
