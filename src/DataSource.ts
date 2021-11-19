@@ -70,52 +70,42 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
   }
 
   private async executeTagQuery(query: DiscourseQuery, data: any[]) {
-    const result           = await this.apiGet(`tag/${query.tag}.json`);
-    const first_topics     = result.data.topic_list.topics
+    const result = await this.apiGet(`tag/${query.tag}.json`);
+    const first_topics = result.data.topic_list.topics;
     const more_topics_url = result.data.topic_list.more_topics_url;
-  
-    if(more_topics_url !== undefined){
-      const route = "tag"
-      const paginated_topics = await this.getPaginatedTopics(query, route)
-      console.log(paginated_topics)
-      
+    
+    // collect paginated results when needed
+    if(more_topics_url !== undefined) {
+      const route = `tag/${query.tag}.json?page=`
+      const paginated_topics = await this.getPaginatedTopics(route)
       const concat_results = await first_topics.concat(paginated_topics)
-      console.log(concat_results)
-      
       const dataFrame = toDataFrame(concat_results)
-      console.log(dataFrame)
-      
       data.push(dataFrame)
     } else {
       data.push(first_topics)
     }
   }
 
-  private async getPaginatedTopics(query: any, route: string) {
-    let page: number = 1;
-    let moreResults : any[] = []
-    let currentResult: string = ""
+  // function adapted from https://github.com/andre347/do-while-loop-api
+  private async getPaginatedTopics(route: string) {
+    let page : number = 1;
+    let paginatedData : any[] = []
+    let nextResult : string = ""
     do {
       try {
-        const request = await this.apiGet(`${route}/${query.tag}.json?page=${page}`);
-        console.log(request);
-
+        const request = await this.apiGet(`${route}${page}`);
         const data = request.data.topic_list.topics;             
-        currentResult = request.data.topic_list.more_topics_url;
+        nextResult = request.data.topic_list.more_topics_url;
 
-        moreResults.push(data); 
-        console.log(moreResults);
-
+        paginatedData.push(data); 
         page++;
-        console.log(`page: ${page}`)
       } catch (err) {
-        console.error(`Oeps, something is wrong ${err}`);
+        console.error(`Oops, something is wrong ${err}`);
       }
-      // keep running until there's no next page
-    } while (currentResult !== undefined);
-
-    const flattened = moreResults.flat()
-    return flattened
+    // keep recursing until the `more_topics_url` prop returns no value
+    } while (nextResult !== undefined);
+      const flattened = paginatedData.flat();
+      return flattened;
   } 
 
   private async executeUserQuery(query: DiscourseQuery, data: any[]) {
