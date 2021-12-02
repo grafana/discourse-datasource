@@ -10,6 +10,10 @@ export interface DiscourseQuery extends DataQuery {
 
   tagQuery?: string;
   tag?: any;
+
+  searchQuery?: string;
+  searchPosted?: string;
+  searchArea?: string;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
@@ -19,14 +23,18 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   period: 'monthly',
   category: 'All categories',
   tagQuery: '',
-  tag: 'observability'
+  tag: 'All tags',
+  searchQuery: '',
+  searchPosted: 'before',
+  searchArea: 'topics_posts'
 };
 
 export enum QueryType {
   Report = 'report',
   User = 'user',
   Tags = 'tags',
-  Tag  = 'tag'
+  Tag  = 'tag',
+  Search = 'search'
 }
 
 /**
@@ -49,6 +57,13 @@ export interface DiscourseReports {
   reports: DiscourseReportType[];
 }
 
+// export interface DiscourseSearch {
+//   type: string;
+//   title: string;
+//   description: string;
+//   description_link?: string;
+// }
+
 export interface DiscourseReportType {
   type: string;
   title: string;
@@ -56,8 +71,38 @@ export interface DiscourseReportType {
   description_link?: string;
 }
 
+// export interface DiscourseSearch {
+//   topics: DiscourseSearchResult[];
+// }
+
+// export interface DiscourseSearchResult {
+//   id: number;
+//   title: string;
+//   fancy_title: string;
+//   slug: string;
+//   posts_count: number;
+//   reply_count: number;
+//   highest_post_number: number;
+//   created_at: string;
+//   last_posted_at: string;
+//   bumped: boolean;
+//   bumped_at: string;
+//   archetype: string;
+//   unseen: boolean;
+//   pinned: any;
+//   visible: boolean;
+//   closed: boolean;
+//   archived: boolean;
+//   bookmarked: any;
+//   liked: any;
+//   tags: string[];
+//   tags_descriptions: {};
+//   category_id: number;
+//   has_accepted_answer: boolean;
+// }
+
 export interface DiscourseTags {
-    tags: DiscourseTag[];
+  tags: DiscourseTag[];
 }
 
 export interface DiscourseTag {

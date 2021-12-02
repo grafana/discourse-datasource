@@ -1,7 +1,7 @@
 import defaults from 'lodash/defaults';
 
 import React, { PureComponent } from 'react';
-import { InlineFormLabel, Select, HorizontalGroup } from '@grafana/ui';
+import { InlineFormLabel, Select, QueryField, HorizontalGroup, InlineFieldRow } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
@@ -18,12 +18,27 @@ const queryTypeOptions = [
   { value: QueryType.User, label: 'User', description: 'User statistics' },
   { value: QueryType.Tags, label: 'Tags (overview)', description: 'shows all tags and counts' },
   { value: QueryType.Tag, label: 'Tag (detailed)', description: 'shows detailed stats per-tag' },
+  { value: QueryType.Search, label: 'Search', description: 'Native search engine' },
 
 ];
 
 const userQueryOptions = [
   { value: 'topPublicUsers', label: 'Top Public Users', description: 'Users who are replying most frequently' },
   { value: 'staff', label: 'Staff', description: 'Statistics for staff users' },
+];
+
+const searchQueryOptions = [
+  { value: 'alerting', label: 'alerting' },
+  { value: 'templating', label: 'templating' },
+];
+const searchPostedOptions = [
+  { value: 'before', label: 'before' },
+  { value: 'after', label: 'after' },
+];
+const searchAreaOptions = [
+  { value: 'topics_posts', label: 'Topics/posts' },
+  { value: 'categories_tags', label: 'Categories/tags' },
+  { value: 'users', label: 'Users' },
 ];
 
 const periodOptions = [
@@ -45,6 +60,42 @@ export class QueryEditor extends PureComponent<Props, State> {
   onReportChange = (reportName: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, reportName: reportName });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchQueryChange = (searchQuery?: string) => {
+    if (!searchQuery) {
+      return;
+    }
+
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchQuery: searchQuery });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchAreaChange = (searchArea?: string) => {
+    if (!searchArea) {
+      return;
+    }
+
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchArea: searchArea });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchBeforeOrAfter = (searchPosted?: string) => {
+    if (!searchPosted) {
+      return;
+    }
+
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchPosted: searchPosted });
 
     // executes the query
     onRunQuery();
@@ -115,10 +166,10 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   render() {
     const query = defaults(this.props.query, defaultQuery);
-    const { queryType, reportName, userQuery, period, category, tag } = query;
+    const { queryType, reportName, userQuery, period, category, tag, searchQuery, searchPosted, searchArea } = query;
 
     return (
-      <HorizontalGroup>
+      <div>
         <div className="gf-form">
           <InlineFormLabel className="query-keyword" width={10}>
             Query Type
@@ -203,7 +254,128 @@ export class QueryEditor extends PureComponent<Props, State> {
             />
           </div>
           )}
-      </HorizontalGroup>
+        {queryType === QueryType.Search && (
+          <div>
+            <div className="gf-form">
+              <InlineFormLabel className="query-keyword" width={7}>
+                Query
+              </InlineFormLabel>
+              <QueryField
+                // additionalPlugins={plugins}
+                // query={query}
+                // cleanText={cleanText}
+                // onTypeahead={onTypeahead}
+                // onRunQuery={onBlur}
+                // onChange={onChange}
+                portalOrigin="jsonapi"
+                placeholder="search Discourse"
+              />
+              {/* <Select
+              width={30}
+              options={searchQueryOptions}
+              value={searchQueryOptions.find((qo) => qo.value === searchQuery)}
+              onChange={(q) => {
+                this.onSearchQueryChange(q.value);
+              }}
+              /> */}
+              <InlineFormLabel className="query-keyword" width={7}>
+                Area
+              </InlineFormLabel>
+              <Select
+                width={30}
+                options={searchAreaOptions}
+                value={searchAreaOptions.find((ao) => ao.value === searchArea)}
+                onChange={(a) => {
+                  this.onSearchAreaChange(a.value);
+                }}
+              />
+            </div>
+            <div className="gf-form">
+              <InlineFormLabel className="query-keyword" width={7}>
+                Categorized
+              </InlineFormLabel>
+              <Select
+                width={30}
+                options={this.state.categoryOptions}
+                value={this.state.categoryOptions.find((co) => co.value === category)}
+                onChange={(category) => {
+                  this.onCategoryChange(category.value || defaultQuery.category || '');
+                }}
+              />
+              <InlineFormLabel className="query-keyword" width={7}>
+                Where topics
+              </InlineFormLabel>
+              {/* <Select
+                width={30}
+                options={this.state.tagOptions}
+                value={this.state.tagOptions.find((to) => to.value === tag)}
+                onChange={(tag) => {
+                  this.onTagChange(tag.value || defaultQuery.tag || '');
+                }}
+              /> */}
+            </div>            
+            <div className="gf-form">
+              <InlineFormLabel className="query-keyword" width={7}>
+                Tagged
+              </InlineFormLabel>
+              <Select
+                width={30}
+                options={this.state.tagOptions}
+                value={this.state.tagOptions.find((to) => to.value === tag)}
+                onChange={(tag) => {
+                  this.onTagChange(tag.value || defaultQuery.tag || '');
+                }}
+              />
+              <InlineFormLabel className="query-keyword" width={7}>
+                Posted by
+              </InlineFormLabel>
+              {/* <Select
+                width={30}
+                options={this.state.tagOptions}
+                value={this.state.tagOptions.find((to) => to.value === tag)}
+                onChange={(tag) => {
+                  this.onTagChange(tag.value || defaultQuery.tag || '');
+                }}
+              /> */}
+            </div>
+            <div className="gf-form">
+              <InlineFormLabel className="query-keyword" width={7}>
+                Return Only...
+              </InlineFormLabel>
+              {/* <Select
+                width={30}
+                options={this.state.categoryOptions}
+                value={this.state.categoryOptions.find((co) => co.value === category)}
+                onChange={(category) => {
+                  this.onCategoryChange(category.value || defaultQuery.category || '');
+                }}
+              /> */}
+              <InlineFormLabel className="query-keyword" width={7}>
+                Posted
+              </InlineFormLabel>
+              <Select
+              width={12}
+              options={searchPostedOptions}
+              value={searchPostedOptions.find((po) => po.value === searchPosted)}
+              onChange={(p) => {
+                this.onSearchBeforeOrAfter(p.value);
+              }}
+              />
+              <InlineFormLabel className="query-keyword" width={7}>
+                Calendar
+              </InlineFormLabel>
+              {/* <Select
+                width={30}
+                options={this.state.tagOptions}
+                value={this.state.tagOptions.find((to) => to.value === tag)}
+                onChange={(tag) => {
+                  this.onTagChange(tag.value || defaultQuery.tag || '');
+                }}
+              /> */}
+            </div>
+          </div>
+          )}
+      </div>
     );
   }
 }

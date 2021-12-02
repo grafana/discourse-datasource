@@ -58,11 +58,18 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
         await this.executeTagsQuery(data);        
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);        
+      } else if (query.queryType === QueryType.Search) {
+        await this.executeSearchQuery(data);        
       }    
     }
     return { data };
   }
 
+  private async executeSearchQuery(data: any[]) {
+    const result = await this.apiGet(`search.json?q=after%3A2021-10-31%20status%3Anoreplies`);
+    const frame = toDataFrame(result.data.topics);
+    data.push(frame);
+}
   private async executeTagsQuery(data: any[]) {
       const result = await this.apiGet(`tags.json`);
       const frame = toDataFrame(result.data.tags);
