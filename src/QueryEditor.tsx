@@ -1,7 +1,7 @@
 import defaults from 'lodash/defaults';
 
 import React, { PureComponent } from 'react';
-import { InlineFormLabel, Select, QueryField, HorizontalGroup, InlineFieldRow } from '@grafana/ui';
+import { InlineFormLabel, Select, Input, Field, QueryField, HorizontalGroup, InlineFieldRow } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
@@ -65,37 +65,9 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
-  onSearchQueryChange = (searchQuery?: string) => {
-    if (!searchQuery) {
-      return;
-    }
-
+  onSearchQueryChange = (searchQuery: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, searchQuery: searchQuery });
-
-    // executes the query
-    onRunQuery();
-  };
-
-  onSearchAreaChange = (searchArea?: string) => {
-    if (!searchArea) {
-      return;
-    }
-
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, searchArea: searchArea });
-
-    // executes the query
-    onRunQuery();
-  };
-
-  onSearchBeforeOrAfter = (searchPosted?: string) => {
-    if (!searchPosted) {
-      return;
-    }
-
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, searchPosted: searchPosted });
 
     // executes the query
     onRunQuery();
@@ -255,125 +227,20 @@ export class QueryEditor extends PureComponent<Props, State> {
           </div>
           )}
         {queryType === QueryType.Search && (
-          <div>
             <div className="gf-form">
               <InlineFormLabel className="query-keyword" width={7}>
                 Query
               </InlineFormLabel>
               <QueryField
                 // additionalPlugins={plugins}
-                // query={query}
                 // cleanText={cleanText}
                 // onTypeahead={onTypeahead}
                 // onRunQuery={onBlur}
-                // onChange={onChange}
+                onChange={this.onSearchQueryChange}
                 portalOrigin="jsonapi"
                 placeholder="search Discourse"
               />
-              {/* <Select
-              width={30}
-              options={searchQueryOptions}
-              value={searchQueryOptions.find((qo) => qo.value === searchQuery)}
-              onChange={(q) => {
-                this.onSearchQueryChange(q.value);
-              }}
-              /> */}
-              <InlineFormLabel className="query-keyword" width={7}>
-                Area
-              </InlineFormLabel>
-              <Select
-                width={30}
-                options={searchAreaOptions}
-                value={searchAreaOptions.find((ao) => ao.value === searchArea)}
-                onChange={(a) => {
-                  this.onSearchAreaChange(a.value);
-                }}
-              />
-            </div>
-            <div className="gf-form">
-              <InlineFormLabel className="query-keyword" width={7}>
-                Categorized
-              </InlineFormLabel>
-              <Select
-                width={30}
-                options={this.state.categoryOptions}
-                value={this.state.categoryOptions.find((co) => co.value === category)}
-                onChange={(category) => {
-                  this.onCategoryChange(category.value || defaultQuery.category || '');
-                }}
-              />
-              <InlineFormLabel className="query-keyword" width={7}>
-                Where topics
-              </InlineFormLabel>
-              {/* <Select
-                width={30}
-                options={this.state.tagOptions}
-                value={this.state.tagOptions.find((to) => to.value === tag)}
-                onChange={(tag) => {
-                  this.onTagChange(tag.value || defaultQuery.tag || '');
-                }}
-              /> */}
-            </div>            
-            <div className="gf-form">
-              <InlineFormLabel className="query-keyword" width={7}>
-                Tagged
-              </InlineFormLabel>
-              <Select
-                width={30}
-                options={this.state.tagOptions}
-                value={this.state.tagOptions.find((to) => to.value === tag)}
-                onChange={(tag) => {
-                  this.onTagChange(tag.value || defaultQuery.tag || '');
-                }}
-              />
-              <InlineFormLabel className="query-keyword" width={7}>
-                Posted by
-              </InlineFormLabel>
-              {/* <Select
-                width={30}
-                options={this.state.tagOptions}
-                value={this.state.tagOptions.find((to) => to.value === tag)}
-                onChange={(tag) => {
-                  this.onTagChange(tag.value || defaultQuery.tag || '');
-                }}
-              /> */}
-            </div>
-            <div className="gf-form">
-              <InlineFormLabel className="query-keyword" width={7}>
-                Return Only...
-              </InlineFormLabel>
-              {/* <Select
-                width={30}
-                options={this.state.categoryOptions}
-                value={this.state.categoryOptions.find((co) => co.value === category)}
-                onChange={(category) => {
-                  this.onCategoryChange(category.value || defaultQuery.category || '');
-                }}
-              /> */}
-              <InlineFormLabel className="query-keyword" width={7}>
-                Posted
-              </InlineFormLabel>
-              <Select
-              width={12}
-              options={searchPostedOptions}
-              value={searchPostedOptions.find((po) => po.value === searchPosted)}
-              onChange={(p) => {
-                this.onSearchBeforeOrAfter(p.value);
-              }}
-              />
-              <InlineFormLabel className="query-keyword" width={7}>
-                Calendar
-              </InlineFormLabel>
-              {/* <Select
-                width={30}
-                options={this.state.tagOptions}
-                value={this.state.tagOptions.find((to) => to.value === tag)}
-                onChange={(tag) => {
-                  this.onTagChange(tag.value || defaultQuery.tag || '');
-                }}
-              /> */}
-            </div>
-          </div>
+            </div>         
           )}
       </div>
     );
