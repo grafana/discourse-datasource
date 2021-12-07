@@ -7,34 +7,42 @@ export interface DiscourseQuery extends DataQuery {
   userQuery?: string;
   period?: string;
   category?: string;
+  categorySlug?: string;
 
   tagQuery?: string;
+  tagSlug?: string;
   tag?: any;
 
   searchQuery?: string;
   searchPosted?: string;
   searchArea?: string;
+  searchStatus?: string;
+  searchSort?: string;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
-  queryType: 'report',
+  queryType: 'search',
   reportName: 'topics_with_no_response.json',
   userQuery: 'topPublicUsers',
   period: 'monthly',
   category: 'All categories',
+  categorySlug: '',
   tagQuery: '',
-  tag: 'All tags',
+  tagSlug: '',
+  tag: '',
   searchQuery: '',
-  searchPosted: 'before',
-  searchArea: 'topics_posts'
+  searchPosted: '%20before:2021-5-31',
+  searchArea: 'topics_posts',
+  searchStatus: '',
+  searchSort: '',
 };
 
 export enum QueryType {
   Report = 'report',
   User = 'user',
   Tags = 'tags',
-  Tag  = 'tag',
-  Search = 'search'
+  Tag = 'tag',
+  Search = 'search',
 }
 
 /**
@@ -42,27 +50,20 @@ export enum QueryType {
  */
 export interface DiscourseDataSourceOptions extends DataSourceJsonData {
   url?: string;
-  username?: string;
+  // username?: string;
 }
 
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend
  */
-export interface DiscourseSecureJsonData {
-  apiKey?: string;
-}
+// export interface DiscourseSecureJsonData {
+//   apiKey?: string;
+// }
 
 //Discourse API types
 export interface DiscourseReports {
   reports: DiscourseReportType[];
 }
-
-// export interface DiscourseSearch {
-//   type: string;
-//   title: string;
-//   description: string;
-//   description_link?: string;
-// }
 
 export interface DiscourseReportType {
   type: string;
@@ -70,36 +71,6 @@ export interface DiscourseReportType {
   description: string;
   description_link?: string;
 }
-
-// export interface DiscourseSearch {
-//   topics: DiscourseSearchResult[];
-// }
-
-// export interface DiscourseSearchResult {
-//   id: number;
-//   title: string;
-//   fancy_title: string;
-//   slug: string;
-//   posts_count: number;
-//   reply_count: number;
-//   highest_post_number: number;
-//   created_at: string;
-//   last_posted_at: string;
-//   bumped: boolean;
-//   bumped_at: string;
-//   archetype: string;
-//   unseen: boolean;
-//   pinned: any;
-//   visible: boolean;
-//   closed: boolean;
-//   archived: boolean;
-//   bookmarked: any;
-//   liked: any;
-//   tags: string[];
-//   tags_descriptions: {};
-//   category_id: number;
-//   has_accepted_answer: boolean;
-// }
 
 export interface DiscourseTags {
   tags: DiscourseTag[];
@@ -123,6 +94,7 @@ export interface DiscourseCategory {
   id: number;
   name: string;
   description: string;
+  slug: string;
 }
 
 export interface DiscourseBulkReports {

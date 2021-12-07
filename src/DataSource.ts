@@ -1,5 +1,5 @@
 import defaults from 'lodash/defaults';
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, BackendSrvRequest } from '@grafana/runtime';
 
 import {
   DataQueryRequest,
@@ -55,66 +55,88 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       } else if (query.queryType === QueryType.User) {
         await this.executeUserQuery(query, data);
       } else if (query.queryType === QueryType.Tags) {
-        await this.executeTagsQuery(data);        
+        await this.executeTagsQuery(data);
       } else if (query.queryType === QueryType.Tag) {
-        await this.executeTagQuery(query, data);        
+        await this.executeTagQuery(query, data);
       } else if (query.queryType === QueryType.Search) {
-        await this.executeSearchQuery(query, data);        
-      }    
+        await this.executeSearchQuery(query, data);
+      }
     }
     return { data };
   }
 
   private async executeSearchQuery(query: DiscourseQuery, data: any[]) {
-    const result = await this.apiGet(`search.json?q=${query.searchQuery}%20after%3A2021-10-31%20status%3Anoreplies`);
-    console.log(result)
-    const frame = toDataFrame(result.data.topics);
-    data.push(frame);
-}
-  private async executeTagsQuery(data: any[]) {
-      const result = await this.apiGet(`tags.json`);
-      const frame = toDataFrame(result.data.tags);
+    if (query.searchArea === 'topics_posts') {
+      // massaging the results and allowing for undefined defaults
+      // add the rest so you aren't adding the formatting in the query editor.
+      // will break better in the future
+      let categorySlug = `%20%23${query.categorySlug}`;
+      if (query.categorySlug === '') {
+        categorySlug = '';
+      }
+      let tag = `%20tags:${query.tagSlug}`;
+      if (query.tagSlug === '') {
+        tag = '';
+      }
+      let filter = `${query.searchQuery}${categorySlug}${tag}${query.searchPosted}${query.searchStatus}${query.searchSort}`;
+      const result = await this.apiGet(`search.json?q=${filter}`);
+      const frame = toDataFrame(result.data.topics);
       data.push(frame);
+    } else if (query.searchArea === 'users') {
+      const result = await this.apiGet(`u/search/users.json?term=${query.searchQuery}`);
+      const frame = toDataFrame(result.data.users);
+      data.push(frame);
+    } else {
+      const result = await this.apiGet(`/tags/filter/search.json?limit=10&q=${query.searchQuery}`);
+      const frame = toDataFrame(result.data.results);
+      data.push(frame);
+    }
+  }
+
+  private async executeTagsQuery(data: any[]) {
+    const result = await this.apiGet(`tags.json`);
+    const frame = toDataFrame(result.data.tags);
+    data.push(frame);
   }
 
   private async executeTagQuery(query: DiscourseQuery, data: any[]) {
     const result = await this.apiGet(`tag/${query.tag}.json`);
     const first_topics = result.data.topic_list.topics;
     const more_topics_url = result.data.topic_list.more_topics_url;
-    
+
     // collect paginated results when needed
-    if(more_topics_url !== undefined) {
-      const route = `tag/${query.tag}.json?page=`
-      const paginated_topics = await this.getPaginatedTopics(route)
-      const concat_results = await first_topics.concat(paginated_topics)
-      const dataFrame = toDataFrame(concat_results)
-      data.push(dataFrame)
+    if (more_topics_url !== undefined) {
+      const route = `tag/${query.tag}.json?page=`;
+      const paginated_topics = await this.getPaginatedTopics(route);
+      const concat_results = await first_topics.concat(paginated_topics);
+      const dataFrame = toDataFrame(concat_results);
+      data.push(dataFrame);
     } else {
-      data.push(first_topics)
+      data.push(first_topics);
     }
   }
 
   // function adapted from https://github.com/andre347/do-while-loop-api
   private async getPaginatedTopics(route: string) {
-    let page : number = 1;
-    let paginatedData : any[] = []
-    let nextResult : string = ""
+    let page = 1;
+    let paginatedData: any[] = [];
+    let nextResult = '';
     do {
       try {
         const request = await this.apiGet(`${route}${page}`);
-        const data = request.data.topic_list.topics;             
+        const data = request.data.topic_list.topics;
         nextResult = request.data.topic_list.more_topics_url;
 
-        paginatedData.push(data); 
+        paginatedData.push(data);
         page++;
       } catch (err) {
         console.error(`Oops, something is wrong ${err}`);
       }
-    // keep recursing until the `more_topics_url` prop returns no value
+      // keep recursing until the `more_topics_url` prop returns no value
     } while (nextResult !== undefined);
-      const flattened = paginatedData.flat();
-      return flattened;
-  } 
+    const flattened = paginatedData.flat();
+    return flattened;
+  }
 
   private async executeUserQuery(query: DiscourseQuery, data: any[]) {
     if (query.userQuery === 'topPublicUsers') {
@@ -186,12 +208,13 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     let result: any;
 
     try {
-      result = await this.apiGet('admin/reports/topics_with_no_response.json');
+      result = await this.apiGet('search.json?q=find-me-in-the-json');
+      console.log(result);
     } catch (error) {
       console.log(error);
     }
 
-    if (result?.data?.report?.title !== 'Topics with no response') {
+    if (result?.data.grouped_search_result.term !== 'find-me-in-the-json') {
       return {
         status: 'error',
         message: 'Invalid credentials. Failed with request to the Discourse API',
@@ -229,6 +252,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       label: 'All categories',
       value: 'All categories',
       description: '',
+      slug: '',
     });
 
     try {
@@ -239,7 +263,9 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
           label: category.name,
           value: category.id.toString(),
           description: category.description,
+          slug: category.slug,
         });
+        console.log(categoryOptions);
       }
     } catch (error) {
       console.log(error);
@@ -252,6 +278,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     tagOptions.push({
       label: 'All tags',
       value: 'All tags',
+      slug: '',
     });
 
     try {
@@ -261,7 +288,9 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
         tagOptions.push({
           label: tag.text,
           value: tag.id.toString(),
+          slug: tag.text,
         });
+        console.log(tagOptions);
       }
     } catch (error) {
       console.log(error);
@@ -272,11 +301,19 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
   async apiGet(path: string): Promise<any> {
     const result = await getBackendSrv().datasourceRequest({
-      url: `${this.instanceSettings.url}/discourse/${path}`,
+      url: `${this.instanceSettings.url}/${path}`,
       method: 'GET',
+      params: this.query
+      // credentials: 'omit'
     });
 
     return result;
   }
 }
-
+//   async doRequest(query: DiscourseQuery) {
+//     const result = await getBackendSrv().datasourceRequest({
+//       method: "GET",
+//       url: "https://community.grafana.com/tags.json",
+//       params: query,
+//     })
+// }

@@ -1,7 +1,6 @@
 import defaults from 'lodash/defaults';
-
 import React, { PureComponent } from 'react';
-import { InlineFormLabel, Select, Input, Field, QueryField, HorizontalGroup, InlineFieldRow } from '@grafana/ui';
+import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
@@ -19,7 +18,6 @@ const queryTypeOptions = [
   { value: QueryType.Tags, label: 'Tags (overview)', description: 'shows all tags and counts' },
   { value: QueryType.Tag, label: 'Tag (detailed)', description: 'shows detailed stats per-tag' },
   { value: QueryType.Search, label: 'Search', description: 'Native search engine' },
-
 ];
 
 const userQueryOptions = [
@@ -27,18 +25,35 @@ const userQueryOptions = [
   { value: 'staff', label: 'Staff', description: 'Statistics for staff users' },
 ];
 
-const searchQueryOptions = [
-  { value: 'alerting', label: 'alerting' },
-  { value: 'templating', label: 'templating' },
-];
 const searchPostedOptions = [
-  { value: 'before', label: 'before' },
-  { value: 'after', label: 'after' },
+  { value: '', label: 'any' },
+  { value: '%20before:2021-5-31', label: 'before' },
+  { value: '%20after:2021-5-31', label: 'after' },
 ];
+
 const searchAreaOptions = [
   { value: 'topics_posts', label: 'Topics/posts' },
-  { value: 'categories_tags', label: 'Categories/tags' },
+  { value: 'categories_tags', label: 'Tags' },
   { value: 'users', label: 'Users' },
+];
+
+// in datasource file: if value = any then return ... else ... (make one validation function for all)
+const searchStatusOptions = [
+  { value: '', label: 'any' },
+  { value: '%20status:open', label: 'are open' },
+  { value: '%20status:closed', label: 'are closed' },
+  { value: '%20status:public', label: 'are public' },
+  { value: '%20status:archived', label: 'are archived' },
+  { value: '%20status:noreplies', label: 'have no replies' },
+];
+
+const searchSortOptions = [
+  { value: '', label: 'Relevance' },
+  { value: '%20order:latest_topic', label: 'Latest Topic' },
+  { value: '%20order:latest', label: 'Latest Post' },
+  { value: '%20order:likes', label: 'Most Liked' },
+  { value: '%20order:views', label: 'Most Viewed' },
+  { value: '%20order:votes', label: 'Most Votes' },
 ];
 
 const periodOptions = [
@@ -73,9 +88,50 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
+  onSearchAreaChange = (searchArea: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchArea: searchArea });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchPostedChange = (searchPosted: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchPosted: searchPosted });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchStatusChange = (searchStatus: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    console.log(searchStatus);
+    onChange({ ...query, searchStatus: searchStatus });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchSortChange = (searchSort: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchSort: searchSort });
+
+    // executes the query
+    onRunQuery();
+  };
+
   onCategoryChange = (category: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, category: category });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchCategoryChange = (categorySlug: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, categorySlug: categorySlug });
 
     // executes the query
     onRunQuery();
@@ -114,12 +170,16 @@ export class QueryEditor extends PureComponent<Props, State> {
   };
 
   onTagChange = (tag?: any) => {
-    if (!tag) {
-      return;
-    }
-
     const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, tag: tag });
+    onChange({ ...query, tag: tag, tagSlug: tag });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onTagSlugChange = (tagSlug?: any) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, tagSlug: tagSlug });
 
     // executes the query
     onRunQuery();
@@ -138,7 +198,20 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   render() {
     const query = defaults(this.props.query, defaultQuery);
-    const { queryType, reportName, userQuery, period, category, tag, searchQuery, searchPosted, searchArea } = query;
+    const {
+      queryType,
+      reportName,
+      userQuery,
+      period,
+      category,
+      categorySlug,
+      tag,
+      tagSlug,
+      searchArea,
+      searchPosted,
+      searchStatus,
+      searchSort,
+    } = query;
 
     return (
       <div>
@@ -225,10 +298,11 @@ export class QueryEditor extends PureComponent<Props, State> {
               }}
             />
           </div>
-          )}
+        )}
         {queryType === QueryType.Search && (
+          <div>
             <div className="gf-form">
-              <InlineFormLabel className="query-keyword" width={7}>
+              <InlineFormLabel className="query-keyword" width={10}>
                 Query
               </InlineFormLabel>
               <QueryField
@@ -240,8 +314,102 @@ export class QueryEditor extends PureComponent<Props, State> {
                 portalOrigin="jsonapi"
                 placeholder="search Discourse"
               />
-            </div>         
-          )}
+              <InlineFormLabel className="query-keyword" width={10}>
+                Search in
+              </InlineFormLabel>
+              <Select
+                width={42}
+                options={searchAreaOptions}
+                value={searchAreaOptions.find((to) => to.value === searchArea)}
+                onChange={(s) => {
+                  this.onSearchAreaChange(s.value || defaultQuery.searchArea || '');
+                }}
+              />
+            </div>
+            {searchArea === 'topics_posts' && (
+              <div>
+                <div className="gf-form">
+                  <InlineFormLabel className="query-keyword" width={10}>
+                    Categorized
+                  </InlineFormLabel>
+                  <Select
+                    width={30}
+                    options={this.state.categoryOptions}
+                    value={this.state.categoryOptions.find((co) => co.slug === categorySlug)}
+                    onChange={(c) => {
+                      this.onSearchCategoryChange(c.slug || defaultQuery.categorySlug || '');
+                    }}
+                  />
+                  <InlineFormLabel className="query-keyword" width={10}>
+                    Tagged
+                  </InlineFormLabel>
+                  <Select
+                    width={40}
+                    options={this.state.tagOptions}
+                    value={this.state.tagOptions.find((to) => to.slug === tagSlug)}
+                    onChange={(t) => {
+                      this.onTagSlugChange(t.slug || defaultQuery.tagSlug || '');
+                    }}
+                  />
+                </div>
+                <div className="gf-form">
+                  <InlineFormLabel className="query-keyword" width={10}>
+                    Time Posted
+                  </InlineFormLabel>
+                  <Select
+                    width={20}
+                    options={searchPostedOptions}
+                    value={searchPostedOptions.find((po) => po.value === searchPosted)}
+                    onChange={(p) => {
+                      this.onSearchPostedChange(p.value || defaultQuery.searchPosted || '');
+                    }}
+                  />
+                  <DatePickerWithInput
+                    width={10}
+                    onChange={(foo) => {
+                      console.log(foo);
+                    }}
+                  />
+                  <InlineFormLabel className="query-keyword" width={10}>
+                    Posted by
+                  </InlineFormLabel>
+                  <Input
+                    // TODO : FIX VALUES
+                    width={40}
+                    placeholder="anyone"
+                    onChange={(tag) => {
+                      console.log(tag);
+                    }}
+                  />
+                </div>
+                <div className="gf-form">
+                  <InlineFormLabel className="query-keyword" width={10}>
+                    Topic Status
+                  </InlineFormLabel>
+                  <Select
+                    width={30}
+                    options={searchStatusOptions}
+                    value={searchStatusOptions.find((so) => so.value === searchStatus)}
+                    onChange={(s) => {
+                      this.onSearchStatusChange(s.value || defaultQuery.searchStatus || '');
+                    }}
+                  />
+                  <InlineFormLabel className="query-keyword" width={10}>
+                    Sort by
+                  </InlineFormLabel>
+                  <Select
+                    width={40}
+                    options={searchSortOptions}
+                    value={searchSortOptions.find((so) => so.value === searchSort)}
+                    onChange={(s) => {
+                      this.onSearchSortChange(s.value || defaultQuery.searchSort || '');
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
