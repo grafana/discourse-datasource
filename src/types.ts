@@ -18,6 +18,8 @@ export interface DiscourseQuery extends DataQuery {
   searchArea?: string;
   searchStatus?: string;
   searchSort?: string;
+  searchDate?: any;
+  searchAuthor?: any;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
@@ -31,7 +33,7 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   tagSlug: '',
   tag: '',
   searchQuery: '',
-  searchPosted: '%20before:2021-5-31',
+  searchPosted: '',
   searchArea: 'topics_posts',
   searchStatus: '',
   searchSort: '',
@@ -50,15 +52,15 @@ export enum QueryType {
  */
 export interface DiscourseDataSourceOptions extends DataSourceJsonData {
   url?: string;
-  // username?: string;
+  username?: string;
 }
 
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend
  */
-// export interface DiscourseSecureJsonData {
-//   apiKey?: string;
-// }
+export interface DiscourseSecureJsonData {
+  apiKey?: string;
+}
 
 //Discourse API types
 export interface DiscourseReports {

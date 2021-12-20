@@ -4,6 +4,7 @@ import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input } from 
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
+// import { isDate, isString } from 'lodash';
 
 interface State {
   reportOptions: Array<SelectableValue<string>>;
@@ -27,8 +28,10 @@ const userQueryOptions = [
 
 const searchPostedOptions = [
   { value: '', label: 'any' },
-  { value: '%20before:2021-5-31', label: 'before' },
-  { value: '%20after:2021-5-31', label: 'after' },
+  { value: '%20before:', label: 'before' },
+  // { value: '%20before:2021-5-31', label: 'before' },
+  // Tue Dec 14 2021 00:00:00 GMT-1000 (Hawaii-Aleutian Standard Time)
+  { value: '%20after:', label: 'after' },
 ];
 
 const searchAreaOptions = [
@@ -47,6 +50,7 @@ const searchStatusOptions = [
   { value: '%20status:noreplies', label: 'have no replies' },
 ];
 
+// same; remove encoding here and add it to search logic
 const searchSortOptions = [
   { value: '', label: 'Relevance' },
   { value: '%20order:latest_topic', label: 'Latest Topic' },
@@ -121,6 +125,25 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
+  onSearchAuthorChange = (searchAuthor: React.FormEvent<HTMLInputElement>) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchAuthor: searchAuthor });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onDatePickerChange = (date: any) => {
+    console.log(date)
+    const baz = date.toString()
+    console.log(baz)
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchDate: date });
+
+    // executes the query
+    onRunQuery();
+  };
+
   onCategoryChange = (category: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, category: category });
@@ -171,7 +194,7 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   onTagChange = (tag?: any) => {
     const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, tag: tag, tagSlug: tag });
+    onChange({ ...query, tag: tag });
 
     // executes the query
     onRunQuery();
@@ -211,6 +234,8 @@ export class QueryEditor extends PureComponent<Props, State> {
       searchPosted,
       searchStatus,
       searchSort,
+      searchDate,
+      searchAuthor,
     } = query;
 
     return (
@@ -311,7 +336,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                 // onTypeahead={onTypeahead}
                 // onRunQuery={onBlur}
                 onChange={this.onSearchQueryChange}
-                portalOrigin="jsonapi"
+                portalOrigin=""
                 placeholder="search Discourse"
               />
               <InlineFormLabel className="query-keyword" width={10}>
@@ -357,7 +382,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                     Time Posted
                   </InlineFormLabel>
                   <Select
-                    width={20}
+                    width={10}
                     options={searchPostedOptions}
                     value={searchPostedOptions.find((po) => po.value === searchPosted)}
                     onChange={(p) => {
@@ -365,20 +390,22 @@ export class QueryEditor extends PureComponent<Props, State> {
                     }}
                   />
                   <DatePickerWithInput
-                    width={10}
-                    onChange={(foo) => {
-                      console.log(foo);
+                    width={20}
+                    closeOnSelect={true}
+                    value={searchDate}
+                    onChange={(date) => {
+                      this.onDatePickerChange(date);
                     }}
                   />
                   <InlineFormLabel className="query-keyword" width={10}>
                     Posted by
                   </InlineFormLabel>
                   <Input
-                    // TODO : FIX VALUES
                     width={40}
                     placeholder="anyone"
-                    onChange={(tag) => {
-                      console.log(tag);
+                    value={searchAuthor}
+                    onChange={(author) => {
+                      this.onSearchAuthorChange(author);
                     }}
                   />
                 </div>

@@ -1,5 +1,5 @@
 import defaults from 'lodash/defaults';
-import { getBackendSrv, BackendSrvRequest } from '@grafana/runtime';
+import { getBackendSrv } from '@grafana/runtime';
 
 import {
   DataQueryRequest,
@@ -67,18 +67,17 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
   private async executeSearchQuery(query: DiscourseQuery, data: any[]) {
     if (query.searchArea === 'topics_posts') {
-      // massaging the results and allowing for undefined defaults
-      // add the rest so you aren't adding the formatting in the query editor.
-      // will break better in the future
-      let categorySlug = `%20%23${query.categorySlug}`;
-      if (query.categorySlug === '') {
-        categorySlug = '';
+      let category = ''
+      let tag = ''
+      if (query.categorySlug !== '') {
+        // add ' #' for category filter
+        category = `%20%23${query.categorySlug}`;
       }
-      let tag = `%20tags:${query.tagSlug}`;
-      if (query.tagSlug === '') {
-        tag = '';
+      if (query.tagSlug !== '') {
+        tag = `%20tags:${query.tagSlug}`;
       }
-      let filter = `${query.searchQuery}${categorySlug}${tag}${query.searchPosted}${query.searchStatus}${query.searchSort}`;
+
+      let filter = `${query.searchQuery}${category}${tag}${query.searchPosted}${query.searchStatus}${query.searchSort}`;
       const result = await this.apiGet(`search.json?q=${filter}`);
       const frame = toDataFrame(result.data.topics);
       data.push(frame);
@@ -116,7 +115,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
-  // function adapted from https://github.com/andre347/do-while-loop-api
   private async getPaginatedTopics(route: string) {
     let page = 1;
     let paginatedData: any[] = [];
@@ -265,7 +263,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
           description: category.description,
           slug: category.slug,
         });
-        console.log(categoryOptions);
       }
     } catch (error) {
       console.log(error);
@@ -290,7 +287,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
           value: tag.id.toString(),
           slug: tag.text,
         });
-        console.log(tagOptions);
+        // console.log(tagOptions);
       }
     } catch (error) {
       console.log(error);
@@ -298,7 +295,8 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
     return tagOptions;
   }
-
+  
+  // switch .datasourceRequest to .fetch or maybe just .get
   async apiGet(path: string): Promise<any> {
     const result = await getBackendSrv().datasourceRequest({
       url: `${this.instanceSettings.url}/${path}`,
@@ -310,10 +308,3 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return result;
   }
 }
-//   async doRequest(query: DiscourseQuery) {
-//     const result = await getBackendSrv().datasourceRequest({
-//       method: "GET",
-//       url: "https://community.grafana.com/tags.json",
-//       params: query,
-//     })
-// }
