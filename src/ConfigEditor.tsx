@@ -1,9 +1,9 @@
 import React from 'react';
 import { DataSourceHttpSettings } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-// import { DiscourseDataSourceOptions } from './types';
+import { DiscourseDataSourceOptions } from './types';
 
-interface Props extends DataSourcePluginOptionsEditorProps {}
+interface Props extends DataSourcePluginOptionsEditorProps<DiscourseDataSourceOptions> {}
 
 export const ConfigEditor = (props: Props) => {
   const { options, onOptionsChange } = props;
@@ -14,7 +14,6 @@ export const ConfigEditor = (props: Props) => {
         dataSourceConfig={options}
         showAccessOptions={true}
         onChange={onOptionsChange}
-        // sigV4AuthEnabled={false}
       />
     </>
   );
