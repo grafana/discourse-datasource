@@ -37,6 +37,7 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   searchArea: 'topics_posts',
   searchStatus: '',
   searchSort: '',
+  searchAuthor: ''
 };
 
 export enum QueryType {
