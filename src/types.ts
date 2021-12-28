@@ -3,16 +3,13 @@ import { DataQuery, DataSourceJsonData } from '@grafana/data';
 export interface DiscourseQuery extends DataQuery {
   queryType: string;
   reportName?: string;
-
   userQuery?: string;
   period?: string;
   category?: string;
-  categorySlug?: string;
-
   tagQuery?: string;
-  tagSlug?: string;
   tag?: any;
-
+  searchCategory?: string;
+  searchTag?: string;
   searchQuery?: string;
   searchPosted?: string;
   searchArea?: string;
@@ -28,16 +25,16 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   userQuery: 'topPublicUsers',
   period: 'monthly',
   category: 'All categories',
-  categorySlug: '',
   tagQuery: '',
-  tagSlug: '',
   tag: '',
+  searchCategory: '',
+  searchTag: '',
   searchQuery: '',
   searchPosted: '',
   searchArea: 'topics_posts',
   searchStatus: '',
   searchSort: '',
-  searchAuthor: ''
+  searchAuthor: '',
 };
 
 export enum QueryType {
@@ -134,6 +131,7 @@ export interface DiscourseReportMultipleData {
 
 export const isDiscourseReportMultipleData = (data: any): data is DiscourseReportMultipleData =>
   data && data.hasOwnProperty('req');
+
 export interface DiscourseReportData {
   x: string;
   y: number;
