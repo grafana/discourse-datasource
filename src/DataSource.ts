@@ -36,6 +36,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     super(instanceSettings);
   }
 
+  // entrypoint for queries
   async query(options: DataQueryRequest<DiscourseQuery>): Promise<DataQueryResponse> {
     const { range } = options;
     const from = range!.from.format('YYYY-MM-DD');
@@ -43,7 +44,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
     const data: DataQueryResponseData[] = [];
 
-    // Return a constant for each query.
+    // return a constant for each query.
     for (const target of options.targets) {
       const query = defaults(target, defaultQuery);
       if (query.hide) {
@@ -65,16 +66,18 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return { data };
   }
 
+  // logic for the search API
   private async executeSearchQuery(query: DiscourseQuery, data: any[]) {
     if (query.searchArea === 'topics_posts') {
-      let category = ''
-      let tag = ''
-      if (query.categorySlug !== '') {
+      let category = '';
+      let tag = '';
+      if (query.searchCategory !== '') {
         // add ' #' for category filter
-        category = `%20%23${query.categorySlug}`;
+        category = `%20%23${query.searchCategory}`;
       }
-      if (query.tagSlug !== '') {
-        tag = `%20tags:${query.tagSlug}`;
+      if (query.searchTag !== '') {
+        // add ' tags:' for tag filter
+        tag = `%20tags:${query.searchTag}`;
       }
 
       let filter = `${query.searchQuery}${category}${tag}${query.searchPosted}${query.searchStatus}${query.searchSort}`;
@@ -92,50 +95,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
-  private async executeTagsQuery(data: any[]) {
-    const result = await this.apiGet(`tags.json`);
-    const frame = toDataFrame(result.data.tags);
-    data.push(frame);
-  }
-
-  private async executeTagQuery(query: DiscourseQuery, data: any[]) {
-    const result = await this.apiGet(`tag/${query.tag}.json`);
-    const first_topics = result.data.topic_list.topics;
-    const more_topics_url = result.data.topic_list.more_topics_url;
-
-    // collect paginated results when needed
-    if (more_topics_url !== undefined) {
-      const route = `tag/${query.tag}.json?page=`;
-      const paginated_topics = await this.getPaginatedTopics(route);
-      const concat_results = await first_topics.concat(paginated_topics);
-      const dataFrame = toDataFrame(concat_results);
-      data.push(dataFrame);
-    } else {
-      data.push(first_topics);
-    }
-  }
-
-  private async getPaginatedTopics(route: string) {
-    let page = 1;
-    let paginatedData: any[] = [];
-    let nextResult = '';
-    do {
-      try {
-        const request = await this.apiGet(`${route}${page}`);
-        const data = request.data.topic_list.topics;
-        nextResult = request.data.topic_list.more_topics_url;
-
-        paginatedData.push(data);
-        page++;
-      } catch (err) {
-        console.error(`Oops, something is wrong ${err}`);
-      }
-      // keep recursing until the `more_topics_url` prop returns no value
-    } while (nextResult !== undefined);
-    const flattened = paginatedData.flat();
-    return flattened;
-  }
-
+  // logic for the reporting API
   private async executeUserQuery(query: DiscourseQuery, data: any[]) {
     if (query.userQuery === 'topPublicUsers') {
       const result = await this.apiGet(`directory_items.json?period=${query.period || 'monthly'}&order=post_count`);
@@ -153,6 +113,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
+  // logic for the reporting API
   private async executeReportQuery(query: DiscourseQuery, from: string, to: string, data: any[]) {
     //strip the .json from the end
     const reportName = query.reportName?.substring(0, query.reportName.length - 5);
@@ -183,6 +144,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
+  // logic for the reporting API
   private convertToDataFrame(query: DiscourseQuery, d: DiscourseReportData[], displayName: string, data: any[]) {
     const frame = new MutableDataFrame({
       refId: query.refId,
@@ -202,29 +164,54 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     data.push(frame);
   }
 
-  async testDatasource() {
-    let result: any;
-
-    try {
-      result = await this.apiGet('search.json?q=find-me-in-the-json');
-      console.log(result);
-    } catch (error) {
-      console.log(error);
-    }
-
-    if (result?.data.grouped_search_result.term !== 'find-me-in-the-json') {
-      return {
-        status: 'error',
-        message: 'Invalid credentials. Failed with request to the Discourse API',
-      };
-    }
-
-    return {
-      status: 'success',
-      message: 'Success',
-    };
+  // logic for the tags (plural) API
+  private async executeTagsQuery(data: any[]) {
+    const result = await this.apiGet(`tags.json`);
+    const frame = toDataFrame(result.data.tags);
+    data.push(frame);
   }
 
+  // logic for the tag (singular) API
+  private async executeTagQuery(query: DiscourseQuery, data: any[]) {
+    const result = await this.apiGet(`tag/${query.tag}.json`);
+    const first_topics = result.data.topic_list.topics;
+    const more_topics_url = result.data.topic_list.more_topics_url;
+
+    // collect paginated results when needed
+    if (more_topics_url !== undefined) {
+      const route = `tag/${query.tag}.json?page=`;
+      const paginated_topics = await this.getPaginatedTopics(route);
+      const concat_results = await first_topics.concat(paginated_topics);
+      const dataFrame = toDataFrame(concat_results);
+      data.push(dataFrame);
+    } else {
+      data.push(first_topics);
+    }
+  }
+
+  // helper function for retrieving paginated results
+  private async getPaginatedTopics(route: string) {
+    let page = 1;
+    let paginatedData: any[] = [];
+    let nextResult = '';
+    do {
+      try {
+        const request = await this.apiGet(`${route}${page}`);
+        const data = request.data.topic_list.topics;
+        nextResult = request.data.topic_list.more_topics_url;
+
+        paginatedData.push(data);
+        page++;
+      } catch (err) {
+        console.error(`Oops, something is wrong ${err}`);
+      }
+      // keep recursing until the `more_topics_url` prop returns no value
+    } while (nextResult !== undefined);
+    const flattened = paginatedData.flat();
+    return flattened;
+  }
+
+  // logic for populating the query editor with report options
   async getReportTypes(): Promise<Array<SelectableValue<string>>> {
     const reportOptions: Array<SelectableValue<string>> = [];
     try {
@@ -244,6 +231,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return reportOptions;
   }
 
+  // logic for populating the query editor with category options
   async getCategories(): Promise<Array<SelectableValue<string>>> {
     const categoryOptions: Array<SelectableValue<string>> = [];
     categoryOptions.push({
@@ -270,6 +258,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return categoryOptions;
   }
 
+  // logic for populating the query editor with tag options
   async getTags(): Promise<Array<SelectableValue<any>>> {
     const tagOptions: Array<SelectableValue<any>> = [];
     tagOptions.push({
@@ -295,13 +284,34 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
     return tagOptions;
   }
-  
-  // switch .datasourceRequest to .fetch or maybe just .get
+
+  // only testing the search API at this time
+  async testDatasource() {
+    let result: any;
+
+    try {
+      result = await this.apiGet('search.json?q=find-me-in-the-json');
+    } catch (error) {}
+
+    if (result?.data.grouped_search_result.term !== 'find-me-in-the-json') {
+      return {
+        status: 'error',
+        message: 'Invalid credentials. Failed with request to the Discourse API',
+      };
+    }
+
+    return {
+      status: 'success',
+      message: 'Success',
+    };
+  }
+
+  // TODO: .datasourceRequest deprecated. switch to .fetch or maybe just .get
   async apiGet(path: string): Promise<any> {
     const result = await getBackendSrv().datasourceRequest({
       url: `${this.instanceSettings.url}/${path}`,
       method: 'GET',
-      params: this.query
+      params: this.query,
       // credentials: 'omit'
     });
 

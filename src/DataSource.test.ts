@@ -18,6 +18,8 @@ describe('DiscourseDatasource', () => {
     url: '/api/datasources/proxy/1',
     meta: {} as PluginMeta,
     jsonData: {},
+    // direct or proxy?
+    access: 'direct',
   };
   let ds: DiscourseDataSource;
 
