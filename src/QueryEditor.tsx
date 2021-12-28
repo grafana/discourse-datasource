@@ -405,10 +405,10 @@ export class QueryEditor extends PureComponent<Props, State> {
                   <InlineFormLabel className="query-keyword" width={10}>
                     Posted by
                   </InlineFormLabel>
-                  <Input 
-                    width={40} 
-                    placeholder="anyone" 
-                    value={searchAuthor} 
+                  <Input
+                    width={40}
+                    placeholder="anyone"
+                    value={searchAuthor}
                     onChange={(e) => this.onSearchAuthorChange(e.currentTarget.value)}
                   />
                 </div>
