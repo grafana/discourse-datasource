@@ -4,7 +4,6 @@ import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input } from 
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
-// import { isDate, isString } from 'lodash';
 
 interface State {
   reportOptions: Array<SelectableValue<string>>;
@@ -76,14 +75,15 @@ export class QueryEditor extends PureComponent<Props, State> {
     tagOptions: [],
   };
 
-  onReportChange = (reportName: string) => {
+  onQueryTypeChange = (queryType: string) => {
     const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, reportName: reportName });
+    onChange({ ...query, queryType: queryType });
 
     // executes the query
     onRunQuery();
   };
 
+  // UI for search API
   onSearchQueryChange = (searchQuery: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, searchQuery: searchQuery });
@@ -95,6 +95,14 @@ export class QueryEditor extends PureComponent<Props, State> {
   onSearchAreaChange = (searchArea: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, searchArea: searchArea });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  onSearchTagChange = (searchTag: any) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchTag: searchTag });
 
     // executes the query
     onRunQuery();
@@ -125,7 +133,7 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
-  onSearchAuthorChange = (searchAuthor: React.FormEvent<HTMLInputElement>) => {
+  onSearchAuthorChange = (searchAuthor: any) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, searchAuthor: searchAuthor });
 
@@ -133,12 +141,30 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
-  onDatePickerChange = (date: any) => {
-    console.log(date)
-    const baz = date.toString()
-    console.log(baz)
+  onSearchCategoryChange = (searchCategory: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, searchCategory: searchCategory });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  // TODO: finish this function
+  onSearchDateChange = (date: any) => {
+    console.log(date);
+    const baz = date.toString();
+    console.log(baz);
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, searchDate: date });
+
+    // executes the query
+    onRunQuery();
+  };
+
+  // UI for reporting API
+  onReportChange = (reportName: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, reportName: reportName });
 
     // executes the query
     onRunQuery();
@@ -147,22 +173,6 @@ export class QueryEditor extends PureComponent<Props, State> {
   onCategoryChange = (category: string) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, category: category });
-
-    // executes the query
-    onRunQuery();
-  };
-
-  onSearchCategoryChange = (categorySlug: string) => {
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, categorySlug: categorySlug });
-
-    // executes the query
-    onRunQuery();
-  };
-
-  onQueryTypeChange = (queryType: string) => {
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, queryType: queryType });
 
     // executes the query
     onRunQuery();
@@ -192,17 +202,10 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
+  // UI for tag API
   onTagChange = (tag?: any) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, tag: tag });
-
-    // executes the query
-    onRunQuery();
-  };
-
-  onTagSlugChange = (tagSlug?: any) => {
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, tagSlug: tagSlug });
 
     // executes the query
     onRunQuery();
@@ -227,15 +230,16 @@ export class QueryEditor extends PureComponent<Props, State> {
       userQuery,
       period,
       category,
-      categorySlug,
+      searchCategory,
       tag,
-      tagSlug,
+      searchTag,
       searchArea,
       searchPosted,
       searchStatus,
       searchSort,
       searchDate,
       searchAuthor,
+      searchQuery,
     } = query;
 
     return (
@@ -335,6 +339,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                 // cleanText={cleanText}
                 // onTypeahead={onTypeahead}
                 // onRunQuery={onBlur}
+                query={searchQuery}
                 onChange={this.onSearchQueryChange}
                 portalOrigin=""
                 placeholder="search Discourse"
@@ -360,9 +365,9 @@ export class QueryEditor extends PureComponent<Props, State> {
                   <Select
                     width={30}
                     options={this.state.categoryOptions}
-                    value={this.state.categoryOptions.find((co) => co.slug === categorySlug)}
+                    value={this.state.categoryOptions.find((co) => co.slug === searchCategory)}
                     onChange={(c) => {
-                      this.onSearchCategoryChange(c.slug || defaultQuery.categorySlug || '');
+                      this.onSearchCategoryChange(c.slug || defaultQuery.searchCategory || '');
                     }}
                   />
                   <InlineFormLabel className="query-keyword" width={10}>
@@ -371,9 +376,9 @@ export class QueryEditor extends PureComponent<Props, State> {
                   <Select
                     width={40}
                     options={this.state.tagOptions}
-                    value={this.state.tagOptions.find((to) => to.slug === tagSlug)}
+                    value={this.state.tagOptions.find((to) => to.slug === searchTag)}
                     onChange={(t) => {
-                      this.onTagSlugChange(t.slug || defaultQuery.tagSlug || '');
+                      this.onSearchTagChange(t.slug || defaultQuery.searchTag || '');
                     }}
                   />
                 </div>
@@ -394,19 +399,17 @@ export class QueryEditor extends PureComponent<Props, State> {
                     closeOnSelect={true}
                     value={searchDate}
                     onChange={(date) => {
-                      this.onDatePickerChange(date);
+                      this.onSearchDateChange(date);
                     }}
                   />
                   <InlineFormLabel className="query-keyword" width={10}>
                     Posted by
                   </InlineFormLabel>
-                  <Input
-                    width={40}
-                    placeholder="anyone"
-                    value={searchAuthor}
-                    onChange={(author) => {
-                      this.onSearchAuthorChange(author);
-                    }}
+                  <Input 
+                    width={40} 
+                    placeholder="anyone" 
+                    value={searchAuthor} 
+                    onChange={(e) => this.onSearchAuthorChange(e.currentTarget.value)}
                   />
                 </div>
                 <div className="gf-form">
