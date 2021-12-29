@@ -245,11 +245,11 @@ export class QueryEditor extends PureComponent<Props, State> {
     return (
       <div>
         <div className="gf-form">
-          <InlineFormLabel className="query-keyword" width={10}>
+          <InlineFormLabel className="query-keyword" width={6}>
             Query Type
           </InlineFormLabel>
           <Select
-            width={25}
+            width={30}
             options={queryTypeOptions}
             value={queryTypeOptions.find((ro) => ro.value === queryType)}
             onChange={(q) => {
@@ -330,8 +330,8 @@ export class QueryEditor extends PureComponent<Props, State> {
         )}
         {queryType === QueryType.Search && (
           <div>
-            <div className="gf-form">
-              <InlineFormLabel className="query-keyword" width={10}>
+            <div className="gf-form">       
+              <InlineFormLabel className="query-keyword" width={6}>
                 Query
               </InlineFormLabel>
               <QueryField
@@ -344,22 +344,24 @@ export class QueryEditor extends PureComponent<Props, State> {
                 portalOrigin=""
                 placeholder="search Discourse"
               />
-              <InlineFormLabel className="query-keyword" width={10}>
-                Search in
-              </InlineFormLabel>
-              <Select
-                width={42}
-                options={searchAreaOptions}
-                value={searchAreaOptions.find((to) => to.value === searchArea)}
-                onChange={(s) => {
-                  this.onSearchAreaChange(s.value || defaultQuery.searchArea || '');
-                }}
-              />
             </div>
+            <div className="gf-form">
+              <InlineFormLabel className="query-keyword" width={6}>
+                  Search in
+                </InlineFormLabel>
+                <Select
+                  width={30}
+                  options={searchAreaOptions}
+                  value={searchAreaOptions.find((to) => to.value === searchArea)}
+                  onChange={(s) => {
+                    this.onSearchAreaChange(s.value || defaultQuery.searchArea || '');
+                  }}
+                />
+            </div>    
             {searchArea === 'topics_posts' && (
               <div>
                 <div className="gf-form">
-                  <InlineFormLabel className="query-keyword" width={10}>
+                  <InlineFormLabel className="query-keyword" width={6}>
                     Categorized
                   </InlineFormLabel>
                   <Select
@@ -370,7 +372,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                       this.onSearchCategoryChange(c.slug || defaultQuery.searchCategory || '');
                     }}
                   />
-                  <InlineFormLabel className="query-keyword" width={10}>
+                  <InlineFormLabel className="query-keyword" width={6}>
                     Tagged
                   </InlineFormLabel>
                   <Select
@@ -383,11 +385,11 @@ export class QueryEditor extends PureComponent<Props, State> {
                   />
                 </div>
                 <div className="gf-form">
-                  <InlineFormLabel className="query-keyword" width={10}>
+                  <InlineFormLabel className="query-keyword" width={6}>
                     Time Posted
                   </InlineFormLabel>
                   <Select
-                    width={10}
+                    width={14}
                     options={searchPostedOptions}
                     value={searchPostedOptions.find((po) => po.value === searchPosted)}
                     onChange={(p) => {
@@ -395,14 +397,14 @@ export class QueryEditor extends PureComponent<Props, State> {
                     }}
                   />
                   <DatePickerWithInput
-                    width={20}
+                    width={16}
                     closeOnSelect={true}
                     value={searchDate}
-                    onChange={(date) => {
-                      this.onSearchDateChange(date);
+                    onChange={(d) => {
+                      this.onSearchDateChange(d);
                     }}
                   />
-                  <InlineFormLabel className="query-keyword" width={10}>
+                  <InlineFormLabel className="query-keyword" width={6}>
                     Posted by
                   </InlineFormLabel>
                   <Input
@@ -413,7 +415,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                   />
                 </div>
                 <div className="gf-form">
-                  <InlineFormLabel className="query-keyword" width={10}>
+                  <InlineFormLabel className="query-keyword" width={6}>
                     Topic Status
                   </InlineFormLabel>
                   <Select
@@ -424,7 +426,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                       this.onSearchStatusChange(s.value || defaultQuery.searchStatus || '');
                     }}
                   />
-                  <InlineFormLabel className="query-keyword" width={10}>
+                  <InlineFormLabel className="query-keyword" width={6}>
                     Sort by
                   </InlineFormLabel>
                   <Select
