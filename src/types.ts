@@ -20,21 +20,25 @@ export interface DiscourseQuery extends DataQuery {
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
+  // reporting API
   queryType: 'search',
   reportName: 'topics_with_no_response.json',
   userQuery: 'topPublicUsers',
   period: 'monthly',
   category: 'All categories',
+  // tags API
   tagQuery: '',
   tag: '',
+  //search API
+  searchDate: '',
   searchCategory: '',
   searchTag: '',
   searchQuery: '',
   searchPosted: '',
-  searchArea: 'topics_posts',
   searchStatus: '',
   searchSort: '',
   searchAuthor: '',
+  searchArea: 'topics_posts',
 };
 
 export enum QueryType {

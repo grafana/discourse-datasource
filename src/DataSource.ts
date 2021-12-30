@@ -68,19 +68,9 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
   // logic for the search API
   private async executeSearchQuery(query: DiscourseQuery, data: any[]) {
+    // TODO: handle pagination
     if (query.searchArea === 'topics_posts') {
-      let category = '';
-      let tag = '';
-      if (query.searchCategory !== '') {
-        // add ' #' for category filter
-        category = `%20%23${query.searchCategory}`;
-      }
-      if (query.searchTag !== '') {
-        // add ' tags:' for tag filter
-        tag = `%20tags:${query.searchTag}`;
-      }
-
-      let filter = `${query.searchQuery}${category}${tag}${query.searchPosted}${query.searchStatus}${query.searchSort}`;
+      const filter = this.encodeFilter(query);
       const result = await this.apiGet(`search.json?q=${filter}`);
       const frame = toDataFrame(result.data.topics);
       data.push(frame);
@@ -93,6 +83,56 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       const frame = toDataFrame(result.data.results);
       data.push(frame);
     }
+  }
+
+  // handle URL-encoding
+  private encodeFilter(query: DiscourseQuery) {
+    const search = query.searchQuery;
+
+    let category = '';
+    let tag = '';
+    let postedWhen = '';
+    let status = '';
+    let sort = '';
+    let author = '';
+    let date = '';
+
+    if (query.searchCategory !== '') {
+      // add ' #' for category filter
+      category = `%20%23${query.searchCategory}`;
+    }
+    if (query.searchTag !== '') {
+      // add ' tags:' for tag filter
+      tag = `%20tags:${query.searchTag}`;
+    }
+    if (query.searchPosted !== '') {
+      // add ' {value}:' for postedWhen filter
+      postedWhen = `%20${query.searchPosted}:`;
+    }
+    if (query.searchSort !== '') {
+      // add ' order:' for sort filter
+      sort = `%20order:${query.searchSort}`;
+    }
+    if (query.searchStatus !== '') {
+      // add ' status:' for status filter
+      status = `%20status:${query.searchStatus}`;
+    }
+    if (query.searchAuthor !== '') {
+      // add ' @' for author filter
+      author = `%20%40${query.searchAuthor}`;
+    }
+    if (query.searchDate !== '') {
+      // parse date object into : 'year-month-day'
+      const [year, month, day] = [
+        query.searchDate.getFullYear(),
+        query.searchDate.getMonth() + 1,
+        query.searchDate.getDate(),
+      ];
+      date = `${year}-${month}-${day}`;
+    }
+
+    let filter = `${search}${category}${tag}${postedWhen}${date}${status}${sort}${author}`;
+    return filter;
   }
 
   // logic for the reporting API

@@ -27,10 +27,8 @@ const userQueryOptions = [
 
 const searchPostedOptions = [
   { value: '', label: 'any' },
-  { value: '%20before:', label: 'before' },
-  // { value: '%20before:2021-5-31', label: 'before' },
-  // Tue Dec 14 2021 00:00:00 GMT-1000 (Hawaii-Aleutian Standard Time)
-  { value: '%20after:', label: 'after' },
+  { value: 'before', label: 'before' },
+  { value: 'after', label: 'after' },
 ];
 
 const searchAreaOptions = [
@@ -39,24 +37,22 @@ const searchAreaOptions = [
   { value: 'users', label: 'Users' },
 ];
 
-// in datasource file: if value = any then return ... else ... (make one validation function for all)
 const searchStatusOptions = [
   { value: '', label: 'any' },
-  { value: '%20status:open', label: 'are open' },
-  { value: '%20status:closed', label: 'are closed' },
-  { value: '%20status:public', label: 'are public' },
-  { value: '%20status:archived', label: 'are archived' },
-  { value: '%20status:noreplies', label: 'have no replies' },
+  { value: 'open', label: 'are open' },
+  { value: 'closed', label: 'are closed' },
+  { value: 'public', label: 'are public' },
+  { value: 'archived', label: 'are archived' },
+  { value: 'noreplies', label: 'have no replies' },
 ];
 
-// same; remove encoding here and add it to search logic
 const searchSortOptions = [
   { value: '', label: 'Relevance' },
-  { value: '%20order:latest_topic', label: 'Latest Topic' },
-  { value: '%20order:latest', label: 'Latest Post' },
-  { value: '%20order:likes', label: 'Most Liked' },
-  { value: '%20order:views', label: 'Most Viewed' },
-  { value: '%20order:votes', label: 'Most Votes' },
+  { value: 'latest_topic', label: 'Latest Topic' },
+  { value: 'latest', label: 'Latest Post' },
+  { value: 'likes', label: 'Most Liked' },
+  { value: 'views', label: 'Most Viewed' },
+  { value: 'votes', label: 'Most Votes' },
 ];
 
 const periodOptions = [
@@ -230,8 +226,8 @@ export class QueryEditor extends PureComponent<Props, State> {
       userQuery,
       period,
       category,
-      searchCategory,
       tag,
+      searchCategory,
       searchTag,
       searchArea,
       searchPosted,
@@ -330,7 +326,7 @@ export class QueryEditor extends PureComponent<Props, State> {
         )}
         {queryType === QueryType.Search && (
           <div>
-            <div className="gf-form">       
+            <div className="gf-form">
               <InlineFormLabel className="query-keyword" width={6}>
                 Query
               </InlineFormLabel>
@@ -347,17 +343,17 @@ export class QueryEditor extends PureComponent<Props, State> {
             </div>
             <div className="gf-form">
               <InlineFormLabel className="query-keyword" width={6}>
-                  Search in
-                </InlineFormLabel>
-                <Select
-                  width={30}
-                  options={searchAreaOptions}
-                  value={searchAreaOptions.find((to) => to.value === searchArea)}
-                  onChange={(s) => {
-                    this.onSearchAreaChange(s.value || defaultQuery.searchArea || '');
-                  }}
-                />
-            </div>    
+                Search in
+              </InlineFormLabel>
+              <Select
+                width={30}
+                options={searchAreaOptions}
+                value={searchAreaOptions.find((to) => to.value === searchArea)}
+                onChange={(s) => {
+                  this.onSearchAreaChange(s.value || defaultQuery.searchArea || '');
+                }}
+              />
+            </div>
             {searchArea === 'topics_posts' && (
               <div>
                 <div className="gf-form">
