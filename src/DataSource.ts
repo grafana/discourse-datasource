@@ -12,6 +12,7 @@ import {
   FieldType,
   SelectableValue,
   toDataFrame,
+  // DataSourcePluginOptionsEditorProps
 } from '@grafana/data';
 
 import flatten from './flatten';
@@ -19,6 +20,7 @@ import flatten from './flatten';
 import {
   DiscourseQuery,
   DiscourseDataSourceOptions,
+  // DiscourseSecureJsonData,
   defaultQuery,
   DiscourseReports,
   DiscourseTags,
@@ -88,14 +90,14 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
   // handle URL-encoding
   private encodeFilter(query: DiscourseQuery) {
     const search = query.searchQuery;
-
+    const date = query.searchDate
     let category = '';
     let tag = '';
     let postedWhen = '';
     let status = '';
     let sort = '';
     let author = '';
-    let date = '';
+    // let date = '';
 
     if (query.searchCategory !== '') {
       // add ' #' for category filter
@@ -121,18 +123,19 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       // add ' @' for author filter
       author = `%20%40${query.searchAuthor}`;
     }
-    if (query.searchDate !== '') {
-      // parse date object into : 'year-month-day'
-      const [year, month, day] = [
-        query.searchDate.getFullYear(),
-        query.searchDate.getMonth() + 1,
-        query.searchDate.getDate(),
-      ];
-      date = `${year}-${month}-${day}`;
-    }
+    // if (query.searchDate !== '') {
+    //   // parse date object into 'year-month-day'
+    //   const [year, month, day] = [
+    //     query.searchDate.getFullYear(),
+    //     query.searchDate.getMonth() + 1,
+    //     query.searchDate.getDate(),
+    //   ];
+    //   date = `${year}-${month}-${day}`;
+    //   console.log(date)
+    // }
 
-    let filter = `${search}${category}${tag}${postedWhen}${date}${status}${sort}${author}`;
-    return filter;
+    const filtr = `${search}${category}${tag}${postedWhen}${date}${status}${sort}${author}`;
+    return filtr;
   }
 
   // logic for the reporting API
@@ -325,6 +328,28 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return tagOptions;
   }
 
+  // async testDatasource() {
+  //   let result: any;
+
+  //   try {
+  //     result = await this.apiGet('admin/reports/topics_with_no_response.json');
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+
+  //   if (result?.data?.report?.title !== 'Topics with no response') {
+  //     return {
+  //       status: 'error',
+  //       message: 'Invalid credentials. Failed with request to the Discourse API',
+  //     };
+  //   }
+
+  //   return {
+  //     status: 'success',
+  //     message: 'Success',
+  //   };
+  // }
+
   // only testing the search API at this time
   async testDatasource() {
     let result: any;
@@ -346,7 +371,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     };
   }
 
-  // TODO: .datasourceRequest deprecated. switch to .fetch or maybe just .get
+  // TODO: .datasourceRequest deprecated. switch to .fetch
   async apiGet(path: string): Promise<any> {
     const result = await getBackendSrv().datasourceRequest({
       url: `${this.instanceSettings.url}/${path}`,

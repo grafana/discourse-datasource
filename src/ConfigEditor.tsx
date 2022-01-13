@@ -1,20 +1,25 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import { DataSourceHttpSettings } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { DiscourseDataSourceOptions } from './types';
+import { DiscourseDataSourceOptions, DiscourseSecureJsonData } from './types';
 
-interface Props extends DataSourcePluginOptionsEditorProps<DiscourseDataSourceOptions> {}
+interface Props extends DataSourcePluginOptionsEditorProps<DiscourseDataSourceOptions, DiscourseSecureJsonData> {}
 
-export const ConfigEditor = (props: Props) => {
-  const { options, onOptionsChange } = props;
-  return (
-    <>
-      <DataSourceHttpSettings
-        defaultUrl="http://localhost:9090"
-        dataSourceConfig={options}
-        showAccessOptions={true}
-        onChange={onOptionsChange}
-      />
-    </>
-  );
-};
+interface State {}
+
+export class ConfigEditor extends PureComponent<Props, State> {
+  render() {
+    const { options, onOptionsChange } = this.props;
+
+    return (
+      <>
+        <DataSourceHttpSettings
+          defaultUrl="http://localhost:9090"
+          dataSourceConfig={options}
+          showAccessOptions={true}
+          onChange={onOptionsChange}
+        />
+      </>
+    );
+  }
+}

@@ -57,12 +57,16 @@ export interface DiscourseDataSourceOptions extends DataSourceJsonData {
   username?: string;
 }
 
-/**
- * Value that is used in the backend, but never sent over HTTP to the frontend
- */
 export interface DiscourseSecureJsonData {
   apiKey?: string;
 }
+
+/**
+ * Value that is used in the backend, but never sent over HTTP to the frontend
+ */
+// export interface DiscourseSecureJsonData {
+//   apiKey?: string;
+// }
 
 //Discourse API types
 export interface DiscourseReports {

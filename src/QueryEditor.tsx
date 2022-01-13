@@ -114,7 +114,6 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   onSearchStatusChange = (searchStatus: string) => {
     const { onChange, query, onRunQuery } = this.props;
-    console.log(searchStatus);
     onChange({ ...query, searchStatus: searchStatus });
 
     // executes the query
@@ -147,11 +146,18 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   // TODO: finish this function
   onSearchDateChange = (date: any) => {
-    console.log(date);
-    const baz = date.toString();
-    console.log(baz);
     const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, searchDate: date });
+    let newDate = ''
+    if (date !== '') {
+      const [year, month, day] = [
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate(),
+      ]
+      newDate = `${year}-${month}-${day}`;
+      console.log(newDate)
+    }
+    onChange({ ...query, searchDate: newDate });
 
     // executes the query
     onRunQuery();
