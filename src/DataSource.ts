@@ -70,12 +70,20 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
   // logic for the search API
   private async executeSearchQuery(query: DiscourseQuery, data: any[]) {
-    // TODO: handle pagination
     if (query.searchArea === 'topics_posts') {
       const filter = this.encodeFilter(query);
       const result = await this.apiGet(`search.json?q=${filter}`);
-      const frame = toDataFrame(result.data.topics);
-      data.push(frame);
+      const firstTopics = result.data.topics;
+      const moreTopics = result.data.grouped_search_result.more_full_page_results;
+      // handled paginated search results as needed
+      // discourse limits search api to 500 results (10 pages of 50)
+      if (moreTopics == true) {
+        const allTopics = await this.paginatedSearch(filter, firstTopics);
+        data.push(allTopics);
+      } else {
+        const frame = toDataFrame(firstTopics);
+        data.push(frame);
+      }
     } else if (query.searchArea === 'users') {
       const result = await this.apiGet(`u/search/users.json?term=${query.searchQuery}`);
       const frame = toDataFrame(result.data.users);
@@ -87,10 +95,37 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
-  // handle URL-encoding
+  private async paginatedSearch(filter: string, firstTopics: any) {
+    const paginatedQuery = `search.json?q=${filter}&page=`;
+    let page = 1;
+    let paginatedData: any[] = [];
+    let nextResult = true;
+
+    do {
+      try {
+        const request = await this.apiGet(`${paginatedQuery}${page}`);
+        const data = request.data.topics;
+        nextResult = request.data.grouped_search_result.more_full_page_results;
+        paginatedData.push(data);
+        page++;
+      } catch (err) {
+        console.error(`Oops, something is wrong ${err}`);
+      }
+    // keep looping until `more_full_page_results` does NOT return true
+    } while (nextResult == true);
+
+    const flattened = paginatedData.flat();
+    const concatResults = await firstTopics.concat(flattened);
+    const dataFrame = toDataFrame(concatResults);
+
+    return dataFrame;
+  }
+
+  // move most of this logic to query editor
+  // build URL-encoded filter
   private encodeFilter(query: DiscourseQuery) {
     const search = query.searchQuery;
-    const date = query.searchDate
+    const date = query.searchDate;
     let category = '';
     let tag = '';
     let postedWhen = '';
@@ -123,16 +158,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       // add ' @' for author filter
       author = `%20%40${query.searchAuthor}`;
     }
-    // if (query.searchDate !== '') {
-    //   // parse date object into 'year-month-day'
-    //   const [year, month, day] = [
-    //     query.searchDate.getFullYear(),
-    //     query.searchDate.getMonth() + 1,
-    //     query.searchDate.getDate(),
-    //   ];
-    //   date = `${year}-${month}-${day}`;
-    //   console.log(date)
-    // }
 
     const filtr = `${search}${category}${tag}${postedWhen}${date}${status}${sort}${author}`;
     return filtr;
@@ -248,7 +273,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       } catch (err) {
         console.error(`Oops, something is wrong ${err}`);
       }
-      // keep recursing until the `more_topics_url` prop returns no value
+      // keep looping until the `more_topics_url` prop returns no value
     } while (nextResult !== undefined);
     const flattened = paginatedData.flat();
     return flattened;

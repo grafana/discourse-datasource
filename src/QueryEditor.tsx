@@ -144,7 +144,6 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
-  // TODO: finish this function
   onSearchDateChange = (date: any) => {
     const { onChange, query, onRunQuery } = this.props;
     let newDate = ''

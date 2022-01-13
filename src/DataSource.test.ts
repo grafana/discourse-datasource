@@ -19,7 +19,7 @@
 //     meta: {} as PluginMeta,
 //     jsonData: {},
 //     // is this right?
-//     access: 'proxy',
+//     // access: 'proxy',
 //   };
 //   let ds: DiscourseDataSource;
 
