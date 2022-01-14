@@ -1,6 +1,6 @@
 import defaults from 'lodash/defaults';
 import React, { PureComponent } from 'react';
-import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input } from '@grafana/ui';
+import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input, InlineSwitch } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
 import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
@@ -146,15 +146,11 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   onSearchDateChange = (date: any) => {
     const { onChange, query, onRunQuery } = this.props;
-    let newDate = ''
+    let newDate = '';
     if (date !== '') {
-      const [year, month, day] = [
-        date.getFullYear(),
-        date.getMonth() + 1,
-        date.getDate(),
-      ]
+      const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
       newDate = `${year}-${month}-${day}`;
-      console.log(newDate)
+      console.log(newDate);
     }
     onChange({ ...query, searchDate: newDate });
 
@@ -212,6 +208,17 @@ export class QueryEditor extends PureComponent<Props, State> {
     onRunQuery();
   };
 
+  onPaginationChange = (newValue: React.ChangeEvent<HTMLInputElement>) => {
+    const { onChange, query, onRunQuery } = this.props;    
+    onChange({
+      ...query,
+      getPaginated: newValue.target.checked,
+    });
+
+    // executes the query
+    onRunQuery();
+  };
+  
   async componentDidMount() {
     try {
       const reportOptions = await this.props.datasource.getReportTypes();
@@ -241,6 +248,7 @@ export class QueryEditor extends PureComponent<Props, State> {
       searchDate,
       searchAuthor,
       searchQuery,
+      getPaginated
     } = query;
 
     return (
@@ -357,6 +365,14 @@ export class QueryEditor extends PureComponent<Props, State> {
                 onChange={(s) => {
                   this.onSearchAreaChange(s.value || defaultQuery.searchArea || '');
                 }}
+              />
+              <InlineFormLabel className="query-keyword" width={9}>
+                Get paginated results?
+              </InlineFormLabel>
+              <InlineSwitch 
+                // disabled={false} 
+                value={getPaginated} 
+                onChange={this.onPaginationChange} 
               />
             </div>
             {searchArea === 'topics_posts' && (
