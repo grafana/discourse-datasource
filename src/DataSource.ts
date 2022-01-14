@@ -73,14 +73,18 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       const result = await this.apiGet(`search.json?q=${filter}`);
       const firstTopics = result.data.topics;
       const moreTopics = result.data.grouped_search_result.more_full_page_results;
+      
       // handle paginated search results as needed
       if (moreTopics == true && query.getPaginated == true) {
         const kind = 'search'
         const paginatedQuery = `search.json?q=${filter}&page=`;
+        
         const allTopics = await this.paginatedResults(paginatedQuery, firstTopics, kind);
+        
         data.push(allTopics);
       } else {
         const frame = toDataFrame(firstTopics);
+        
         data.push(frame);
       }
     } else if (query.searchArea === 'users') {
@@ -138,27 +142,27 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     do {
       try {
         const request = await this.apiGet(`${paginatedQuery}${page}`);
+        
         if (kind == 'search') {
           data = request.data.topics;
           nextResult = request.data.grouped_search_result.more_full_page_results;
         } else if (kind == 'tags') {
           data = request.data.topic_list.topics;
           nextResult = request.data.topic_list.more_topics_url;
-          console.log(`nextResult=${nextResult}`)
-          // if (nextResult == undefined) {
-          //   nextResult == null
-          // }
         }   
+
         paginatedTopics.push(data);    
         page++;
+
       } catch (err) {
         console.error(`Oops, something is wrong ${err}`);
       }
-    // limit results to 10 pages total (500 results for search, 300 results for tag)
-    // OR quit when `next result` returns null or undefined
+    // limit results to 10 pages total (500 for search, 300 for tag)
+    // OR quit when nextResult returns null or undefined
     } while (page < 10 && nextResult !== null && nextResult !== undefined);
 
     const dataFrame = toDataFrame(firstTopics.concat(paginatedTopics.flat()));
+    
     return dataFrame;
   }
 
@@ -246,42 +250,14 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
 
     // collect paginated results when needed
     if (query.getPaginated == true && moreTopics !== undefined) {
-    // if (moreTopics !== undefined) {
       const kind = 'tags'
       const paginatedQuery = `tag/${query.tag}.json?page=`;
       const allTopics = await this.paginatedResults(paginatedQuery, firstTopics, kind);
-    // if (more_topics_url !== undefined) {
-    //   const route = `tag/${query.tag}.json?page=`;
-    //   const paginated_topics = await this.getPaginatedTopics(route);
-    //   const concat_results = await first_topics.concat(paginated_topics);
-    //   const dataFrame = toDataFrame(concat_results);
       data.push(allTopics);
     } else {
       data.push(firstTopics);
     }
   }
-
-  // helper function for retrieving paginated results
-  // private async getPaginatedTopics(route: string) {
-  //   let page = 1;
-  //   let paginatedData: any[] = [];
-  //   let nextResult = '';
-  //   do {
-  //     try {
-  //       const request = await this.apiGet(`${route}${page}`);
-  //       const data = request.data.topic_list.topics;
-  //       nextResult = request.data.topic_list.more_topics_url;
-
-  //       paginatedData.push(data);
-  //       page++;
-  //     } catch (err) {
-  //       console.error(`Oops, something is wrong ${err}`);
-  //     }
-  //     // keep looping until the `more_topics_url` prop returns no value
-  //   } while (nextResult !== undefined);
-  //   const flattened = paginatedData.flat();
-  //   return flattened;
-  // }
 
   // logic for populating the query editor with report options
   async getReportTypes(): Promise<Array<SelectableValue<string>>> {
@@ -348,7 +324,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
           value: tag.id.toString(),
           slug: tag.text,
         });
-        // console.log(tagOptions);
       }
     } catch (error) {
       console.log(error);
@@ -379,7 +354,8 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
   //   };
   // }
 
-  // only testing the search API at this time
+  // TODO: only testing the search API at this time
+  // TODO: add flow control to test reporting API when headers are added to configeditor
   async testDatasource() {
     let result: any;
 
