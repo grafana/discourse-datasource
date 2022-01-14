@@ -17,6 +17,7 @@ export interface DiscourseQuery extends DataQuery {
   searchSort?: string;
   searchDate?: any;
   searchAuthor?: any;
+  getPaginated?: boolean;
 }
 
 export const defaultQuery: Partial<DiscourseQuery> = {
@@ -30,15 +31,16 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   tagQuery: '',
   tag: '',
   //search API
-  searchDate: '',
+  searchDate: '2022-01-01',
   searchCategory: '',
   searchTag: '',
   searchQuery: '',
-  searchPosted: '',
+  searchPosted: 'after',
   searchStatus: '',
-  searchSort: '',
+  searchSort: 'latest',
   searchAuthor: '',
   searchArea: 'topics_posts',
+  getPaginated: false
 };
 
 export enum QueryType {
