@@ -335,6 +335,13 @@ export class QueryEditor extends PureComponent<Props, State> {
                 this.onTagChange(tag.value || defaultQuery.tag || '');
               }}
             />
+            <InlineFormLabel className="query-keyword" width={9}>
+              Get paginated results?
+            </InlineFormLabel>
+            <InlineSwitch 
+              value={getPaginated} 
+              onChange={this.onPaginationChange} 
+            />
           </div>
         )}
         {queryType === QueryType.Search && (
@@ -370,7 +377,6 @@ export class QueryEditor extends PureComponent<Props, State> {
                 Get paginated results?
               </InlineFormLabel>
               <InlineSwitch 
-                // disabled={false} 
                 value={getPaginated} 
                 onChange={this.onPaginationChange} 
               />
