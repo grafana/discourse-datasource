@@ -73,18 +73,18 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       const result = await this.apiGet(`search.json?q=${filter}`);
       const firstTopics = result.data.topics;
       const moreTopics = result.data.grouped_search_result.more_full_page_results;
-      
+
       // handle paginated search results as needed
-      if (moreTopics == true && query.getPaginated == true) {
-        const kind = 'search'
+      if (moreTopics === true && query.getPaginated === true) {
+        const kind = 'search';
         const paginatedQuery = `search.json?q=${filter}&page=`;
-        
+
         const allTopics = await this.paginatedResults(paginatedQuery, firstTopics, kind);
-        
+
         data.push(allTopics);
       } else {
         const frame = toDataFrame(firstTopics);
-        
+
         data.push(frame);
       }
     } else if (query.searchArea === 'users') {
@@ -97,33 +97,40 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
       data.push(frame);
     }
   }
- 
+
   // build URL-encoded filter
   private encodeFilter(query: DiscourseQuery) {
     const search = query.searchQuery;
-    const date = query.searchDate;
-    let [category, tag, postedWhen, status, sort, author] = ['','','','','',''];
+    let date = query.searchDate;
+    let [category, tag, postedWhen, status, sort, author] = ['', '', '', '', '', ''];
 
     if (query.searchCategory !== '') {
       // add ' #' for category filter
       category = `%20%23${query.searchCategory}`;
     }
+
     if (query.searchTag !== '') {
       // add ' tags:' for tag filter
       tag = `%20tags:${query.searchTag}`;
     }
+
     if (query.searchPosted !== '') {
       // add ' {value}:' for postedWhen filter
       postedWhen = `%20${query.searchPosted}:`;
+    } else {
+      date = '';
     }
+
     if (query.searchSort !== '') {
       // add ' order:' for sort filter
       sort = `%20order:${query.searchSort}`;
     }
+
     if (query.searchStatus !== '') {
       // add ' status:' for status filter
       status = `%20status:${query.searchStatus}`;
     }
+
     if (query.searchAuthor !== '') {
       // add ' @' for author filter
       author = `%20%40${query.searchAuthor}`;
@@ -138,31 +145,30 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     let page = 1;
     let paginatedTopics: any[] = [];
     let nextResult = true;
-    let data = {}
+    let data = {};
     do {
       try {
         const request = await this.apiGet(`${paginatedQuery}${page}`);
-        
-        if (kind == 'search') {
+
+        if (kind === 'search') {
           data = request.data.topics;
           nextResult = request.data.grouped_search_result.more_full_page_results;
-        } else if (kind == 'tags') {
+        } else if (kind === 'tags') {
           data = request.data.topic_list.topics;
           nextResult = request.data.topic_list.more_topics_url;
-        }   
+        }
 
-        paginatedTopics.push(data);    
+        paginatedTopics.push(data);
         page++;
-
       } catch (err) {
         console.error(`Oops, something is wrong ${err}`);
       }
-    // limit results to 10 pages total (500 for search, 300 for tag)
-    // OR quit when nextResult returns null or undefined
+      // limit results to 10 pages total (500 for search, 300 for tag)
+      // OR quit when nextResult returns null or undefined
     } while (page < 10 && nextResult !== null && nextResult !== undefined);
 
     const dataFrame = toDataFrame(firstTopics.concat(paginatedTopics.flat()));
-    
+
     return dataFrame;
   }
 
@@ -249,8 +255,8 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     const moreTopics = result.data.topic_list.more_topics_url;
 
     // collect paginated results when needed
-    if (query.getPaginated == true && moreTopics !== undefined) {
-      const kind = 'tags'
+    if (query.getPaginated === true && moreTopics !== undefined) {
+      const kind = 'tags';
       const paginatedQuery = `tag/${query.tag}.json?page=`;
       const allTopics = await this.paginatedResults(paginatedQuery, firstTopics, kind);
       data.push(allTopics);

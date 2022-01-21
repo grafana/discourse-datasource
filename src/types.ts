@@ -40,7 +40,7 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   searchSort: 'latest',
   searchAuthor: '',
   searchArea: 'topics_posts',
-  getPaginated: false
+  getPaginated: false,
 };
 
 export enum QueryType {

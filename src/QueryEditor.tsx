@@ -209,7 +209,7 @@ export class QueryEditor extends PureComponent<Props, State> {
   };
 
   onPaginationChange = (newValue: React.ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query, onRunQuery } = this.props;    
+    const { onChange, query, onRunQuery } = this.props;
     onChange({
       ...query,
       getPaginated: newValue.target.checked,
@@ -218,7 +218,7 @@ export class QueryEditor extends PureComponent<Props, State> {
     // executes the query
     onRunQuery();
   };
-  
+
   async componentDidMount() {
     try {
       const reportOptions = await this.props.datasource.getReportTypes();
@@ -248,7 +248,7 @@ export class QueryEditor extends PureComponent<Props, State> {
       searchDate,
       searchAuthor,
       searchQuery,
-      getPaginated
+      getPaginated,
     } = query;
 
     return (
@@ -338,10 +338,7 @@ export class QueryEditor extends PureComponent<Props, State> {
             <InlineFormLabel className="query-keyword" width={9}>
               Get paginated results?
             </InlineFormLabel>
-            <InlineSwitch 
-              value={getPaginated} 
-              onChange={this.onPaginationChange} 
-            />
+            <InlineSwitch value={getPaginated} onChange={this.onPaginationChange} />
           </div>
         )}
         {queryType === QueryType.Search && (
@@ -376,10 +373,7 @@ export class QueryEditor extends PureComponent<Props, State> {
               <InlineFormLabel className="query-keyword" width={9}>
                 Get paginated results?
               </InlineFormLabel>
-              <InlineSwitch 
-                value={getPaginated} 
-                onChange={this.onPaginationChange} 
-              />
+              <InlineSwitch value={getPaginated} onChange={this.onPaginationChange} />
             </div>
             {searchArea === 'topics_posts' && (
               <div>
@@ -416,7 +410,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                     options={searchPostedOptions}
                     value={searchPostedOptions.find((po) => po.value === searchPosted)}
                     onChange={(p) => {
-                      this.onSearchPostedChange(p.value || defaultQuery.searchPosted || '');
+                      this.onSearchPostedChange(p.value || '');
                     }}
                   />
                   <DatePickerWithInput
