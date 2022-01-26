@@ -1,7 +1,6 @@
 import { DiscourseDataSource } from './DataSource';
 import { DiscourseQuery, QueryType } from './types';
 import { DataQueryRequest, DataSourceInstanceSettings, PluginMeta, toUtc } from '@grafana/data';
-// import { DataSourceInstanceSettings, PluginMeta } from '@grafana/data';
 import { BackendSrv, BackendSrvRequest, setBackendSrv } from '@grafana/runtime';
 import { topicsWithNoResponse } from './testdata/topics_with_no_response';
 import { topicsWithNoResponseFromBulkApi } from './testdata/topics_with_no_response_bulk';
@@ -19,7 +18,7 @@ describe('DiscourseDatasource', () => {
     url: '/api/datasources/proxy/1/discourse',
     meta: {} as PluginMeta,
     jsonData: {},
-    access: 'direct'
+    access: 'direct',
   };
   let ds: DiscourseDataSource;
 
