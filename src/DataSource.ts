@@ -381,7 +381,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     };
   }
 
-  // TODO: .datasourceRequest deprecated. switch to .fetch
+  // TODO: .datasourceRequest is deprecated; switch to .fetch
   async apiGet(path: string): Promise<any> {
     const result = await getBackendSrv().datasourceRequest({
       url: `${this.instanceSettings.url}/${path}`,

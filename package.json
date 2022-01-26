@@ -15,7 +15,7 @@
     "@grafana/data": "8.3.4",
     "@grafana/toolkit": "8.3.4",
     "@grafana/ui": "8.3.4",
-    "@testing-library/jest-dom": "5.11.9",
+    "@testing-library/jest-dom": "5.4.0",
     "@testing-library/react": "^11.2.5",
     "@types/lodash": "latest",
     "@types/memory-cache": "^0.2.1"
