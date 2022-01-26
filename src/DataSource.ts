@@ -18,7 +18,6 @@ import flatten from './flatten';
 
 import {
   DiscourseQuery,
-  DiscourseDataSourceOptions,
   defaultQuery,
   DiscourseReports,
   DiscourseTags,
@@ -31,8 +30,8 @@ import {
   isDiscourseReportData,
 } from './types';
 
-export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, DiscourseDataSourceOptions> {
-  constructor(private instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions>) {
+export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
+  constructor(private instanceSettings: DataSourceInstanceSettings) {
     super(instanceSettings);
   }
 

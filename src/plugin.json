@@ -44,23 +44,6 @@
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
-  "routes": [
-    {
-      "path": "discourse",
-      "method": "GET",
-      "url": "{{.JsonData.url}}",
-      "headers": [
-        {
-          "name": "Api-Username",
-          "content": "{{.JsonData.username}}"
-        },
-        {
-          "name": "Api-Key",
-          "content": "{{.SecureJsonData.apiKey}}"
-        }
-      ]
-    }
-  ],
   "dependencies": {
     "grafanaDependency": ">=7.0.3",
     "plugins": []

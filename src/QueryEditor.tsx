@@ -3,14 +3,14 @@ import React, { PureComponent } from 'react';
 import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input, InlineSwitch } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
-import { defaultQuery, DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
+import { defaultQuery, DiscourseQuery, QueryType } from './types';
 
 interface State {
   reportOptions: Array<SelectableValue<string>>;
   categoryOptions: Array<SelectableValue<string>>;
   tagOptions: Array<SelectableValue<any>>;
 }
-type Props = QueryEditorProps<DiscourseDataSource, DiscourseQuery, DiscourseDataSourceOptions>;
+type Props = QueryEditorProps<DiscourseDataSource, DiscourseQuery>;
 
 const queryTypeOptions = [
   { value: QueryType.Report, label: 'Report', description: 'Discourse admin reports' },
