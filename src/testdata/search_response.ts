@@ -1,4 +1,4 @@
-const topicsWithNoResponse: any = {
+const searchResponse: any = {
   posts: [],
   users: [],
   categories: [],
@@ -21,4 +21,4 @@ const topicsWithNoResponse: any = {
   },
 };
 
-export { topicsWithNoResponse };
+export { searchResponse };

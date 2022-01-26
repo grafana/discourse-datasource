@@ -2,7 +2,7 @@ import { DiscourseDataSource } from './DataSource';
 import { DiscourseQuery, QueryType } from './types';
 import { DataQueryRequest, DataSourceInstanceSettings, PluginMeta, toUtc } from '@grafana/data';
 import { BackendSrv, BackendSrvRequest, setBackendSrv } from '@grafana/runtime';
-import { topicsWithNoResponse } from './testdata/topics_with_no_response';
+import { searchResponse } from './testdata/search_response';
 import { topicsWithNoResponseFromBulkApi } from './testdata/topics_with_no_response_bulk';
 import { consolidatedPageViewsFromBulkApi } from './testdata/consolidated_page_views_bulk';
 import { topPublicUsers } from './testdata/top_public_users';
@@ -31,7 +31,7 @@ describe('DiscourseDatasource', () => {
       beforeEach(() => {
         setupBackendSrv({
           url: '/api/datasources/proxy/1/discourse/search.json?q=find-me-in-the-json',
-          response: topicsWithNoResponse,
+          response: searchResponse,
         });
       });
 
