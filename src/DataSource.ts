@@ -1,5 +1,5 @@
 import defaults from 'lodash/defaults';
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 
 import {
   DataQueryRequest,
@@ -40,12 +40,15 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     const { range } = options;
     const from = range!.from.format('YYYY-MM-DD');
     const to = range!.to.format('YYYY-MM-DD');
-
     const data: DataQueryResponseData[] = [];
 
     // return a constant for each query.
     for (const target of options.targets) {
       const query = defaults(target, defaultQuery);
+
+      // support templated search queries
+      const searchVar = getTemplateSrv().replace(query.searchQuery, options.scopedVars);
+
       if (query.hide) {
         continue;
       }
@@ -59,16 +62,16 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);
       } else if (query.queryType === QueryType.Search) {
-        await this.executeSearchQuery(query, data);
+        await this.executeSearchQuery(searchVar, query, data);
       }
     }
     return { data };
   }
 
   // logic for the search API
-  private async executeSearchQuery(query: DiscourseQuery, data: any[]) {
+  private async executeSearchQuery(searchVar: any, query: DiscourseQuery, data: any[]) {
     if (query.searchArea === 'topics_posts') {
-      const filter = this.encodeFilter(query);
+      const filter = this.encodeFilter(searchVar, query);
       const result = await this.apiGet(`search.json?q=${filter}`);
       const firstTopics = result.data.topics;
       const moreTopics = result.data.grouped_search_result.more_full_page_results;
@@ -98,8 +101,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
   }
 
   // build URL-encoded filter
-  private encodeFilter(query: DiscourseQuery) {
-    const search = query.searchQuery;
+  private encodeFilter(search: any, query: DiscourseQuery) {
     let date = query.searchDate;
     let [category, tag, postedWhen, status, sort, author] = ['', '', '', '', '', ''];
 
@@ -337,48 +339,49 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     return tagOptions;
   }
 
-  // async testDatasource() {
-  //   let result: any;
-
-  //   try {
-  //     result = await this.apiGet('admin/reports/topics_with_no_response.json');
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-
-  //   if (result?.data?.report?.title !== 'Topics with no response') {
-  //     return {
-  //       status: 'error',
-  //       message: 'Invalid credentials. Failed with request to the Discourse API',
-  //     };
-  //   }
-
-  //   return {
-  //     status: 'success',
-  //     message: 'Success',
-  //   };
-  // }
-
-  // TODO: only testing the search API at this time
-  // TODO: add flow control to test reporting API when headers are added to configeditor
   async testDatasource() {
-    let result: any;
+    // if user adds credentials, test reporting API. Otherwise, test search API
+    const headers = Object.values(this.instanceSettings.jsonData);
 
-    try {
-      result = await this.apiGet('search.json?q=find-me-in-the-json');
-    } catch (error) {}
+    if (headers.includes('Api-Key' && 'Api-Username')) {
+      let result: any;
 
-    if (result?.data.grouped_search_result.term !== 'find-me-in-the-json') {
+      try {
+        result = await this.apiGet('admin/reports/topics_with_no_response.json');
+      } catch (error) {
+        console.log(error);
+      }
+
+      if (result?.data?.report?.title !== 'Topics with no response') {
+        return {
+          status: 'error',
+          message: 'Invalid credentials. Failed with request to the Discourse API',
+        };
+      }
       return {
-        status: 'error',
-        message: 'Invalid credentials. Failed with request to the Discourse API',
+        status: 'success',
+        message: 'Success',
+      };
+    } else {
+      let result: any;
+
+      try {
+        result = await this.apiGet('search.json?q=find-me-in-the-json');
+      } catch (error) {
+        console.log(error);
+      }
+
+      if (result?.data.grouped_search_result.term !== 'find-me-in-the-json') {
+        return {
+          status: 'error',
+          message: 'Invalid credentials. Failed with request to the Discourse API',
+        };
+      }
+      return {
+        status: 'success',
+        message: 'Success',
       };
     }
-
-    return {
-      status: 'success',
-      message: 'Success',
-    };
   }
 
   // TODO: .datasourceRequest is deprecated; switch to .fetch
@@ -387,7 +390,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       url: `${this.instanceSettings.url}/${path}`,
       method: 'GET',
       params: this.query,
-      // credentials: 'omit'
     });
 
     return result;
