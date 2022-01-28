@@ -37,7 +37,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
 
   // entrypoint for queries
   async query(options: DataQueryRequest<DiscourseQuery>): Promise<DataQueryResponse> {
-    const { range } = options;
+    const { range, scopedVars } = options;
     const from = range!.from.format('YYYY-MM-DD');
     const to = range!.to.format('YYYY-MM-DD');
     const data: DataQueryResponseData[] = [];
@@ -45,9 +45,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     // return a constant for each query.
     for (const target of options.targets) {
       const query = defaults(target, defaultQuery);
-
-      // support templated search queries
-      const searchVar = getTemplateSrv().replace(query.searchQuery, options.scopedVars);
 
       if (query.hide) {
         continue;
@@ -62,6 +59,8 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);
       } else if (query.queryType === QueryType.Search) {
+        // support templated search queries
+        const searchVar = getTemplateSrv().replace(query.searchQuery, scopedVars);
         await this.executeSearchQuery(searchVar, query, data);
       }
     }
