@@ -451,7 +451,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                     options={searchSortOptions}
                     value={searchSortOptions.find((so) => so.value === searchSort)}
                     onChange={(s) => {
-                      this.onSearchSortChange(s.value || defaultQuery.searchSort || '');
+                      this.onSearchSortChange(s.value || '');
                     }}
                   />
                 </div>
