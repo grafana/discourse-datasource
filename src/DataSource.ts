@@ -142,11 +142,14 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
 
   // pagination function for search api and tags api
   private async paginatedResults(paginatedQuery: string, firstTopics: any, kind: string) {
-    let page = 1;
     let paginatedTopics: any[] = [];
     let nextResult = true;
     let data = {};
-    do {
+
+    // limit results to 10 pages total (500 for search, 300 for tag)
+    // OR quit when nextResult returns null or undefined
+    const maxPage = 10;
+    for (let page = 1; page < maxPage && nextResult !== null && nextResult !== undefined; page++) {
       try {
         const request = await this.apiGet(`${paginatedQuery}${page}`);
 
@@ -159,13 +162,10 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
         }
 
         paginatedTopics.push(data);
-        page++;
       } catch (err) {
         console.error(`Oops, something is wrong ${err}`);
       }
-      // limit results to 10 pages total (500 for search, 300 for tag)
-      // OR quit when nextResult returns null or undefined
-    } while (page < 10 && nextResult !== null && nextResult !== undefined);
+    }
 
     const dataFrame = toDataFrame(firstTopics.concat(paginatedTopics.flat()));
 
