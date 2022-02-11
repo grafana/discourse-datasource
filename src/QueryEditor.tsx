@@ -108,6 +108,9 @@ export class QueryEditor extends PureComponent<Props, State> {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, searchPosted: searchPosted });
 
+    if (searchPosted === '') {
+      onChange({ ...query, searchPosted: searchPosted, searchDate: '' });
+    }
     // executes the query
     onRunQuery();
   };

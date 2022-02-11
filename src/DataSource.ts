@@ -50,6 +50,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
         continue;
       }
 
+      // use switch instead
       if (query.queryType === QueryType.Report) {
         await this.executeReportQuery(query, from, to, data);
       } else if (query.queryType === QueryType.User) {
@@ -101,43 +102,28 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
 
   // build URL-encoded filter
   private encodeFilter(search: any, query: DiscourseQuery) {
-    let date = query.searchDate;
-    let [category, tag, postedWhen, status, sort, author] = ['', '', '', '', '', ''];
+    const filters = [
+      [search, search],
+      [query.searchCategory, `%20%23${query.searchCategory}`],
+      [query.searchTag, `%20tags:${query.searchTag}`],
+      [query.searchPosted, `%20${query.searchPosted}:`],
+      [query.searchDate, query.searchDate],
+      [query.searchSort, `%20order:${query.searchSort}`],
+      [query.searchStatus, `%20status:${query.searchStatus}`],
+      [query.searchAuthor, `%20%40${query.searchAuthor}`],
+    ];
 
-    if (query.searchCategory !== '') {
-      // add ' #' for category filter
-      category = `%20%23${query.searchCategory}`;
-    }
+    const nullCheck = filters.map((filter) => {
+      let results: any = [];
 
-    if (query.searchTag !== '') {
-      // add ' tags:' for tag filter
-      tag = `%20tags:${query.searchTag}`;
-    }
+      if (filter[0] !== '') {
+        results.push(filter[1]);
+      }
+      return results;
+    });
 
-    if (query.searchPosted !== '') {
-      // add ' {value}:' for postedWhen filter
-      postedWhen = `%20${query.searchPosted}:`;
-    } else {
-      date = '';
-    }
-
-    if (query.searchSort !== '') {
-      // add ' order:' for sort filter
-      sort = `%20order:${query.searchSort}`;
-    }
-
-    if (query.searchStatus !== '') {
-      // add ' status:' for status filter
-      status = `%20status:${query.searchStatus}`;
-    }
-
-    if (query.searchAuthor !== '') {
-      // add ' @' for author filter
-      author = `%20%40${query.searchAuthor}`;
-    }
-
-    const filtr = `${search}${category}${tag}${postedWhen}${date}${status}${sort}${author}`;
-    return filtr;
+    const joinFilter = nullCheck.flat().join('');
+    return joinFilter;
   }
 
   // pagination function for search api and tags api

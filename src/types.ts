@@ -31,11 +31,11 @@ export const defaultQuery: Partial<DiscourseQuery> = {
   tagQuery: '',
   tag: '',
   //search API
-  searchDate: '2022-01-01',
+  searchDate: '',
   searchCategory: '',
   searchTag: '',
   searchQuery: '',
-  searchPosted: 'after',
+  searchPosted: '',
   searchStatus: '',
   searchSort: 'latest',
   searchAuthor: '',
