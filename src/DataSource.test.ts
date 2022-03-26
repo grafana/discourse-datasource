@@ -1,7 +1,8 @@
 import { DiscourseDataSource } from './DataSource';
-import { DiscourseDataSourceOptions, DiscourseQuery, QueryType } from './types';
+import { DiscourseQuery, QueryType } from './types';
 import { DataQueryRequest, DataSourceInstanceSettings, PluginMeta, toUtc } from '@grafana/data';
 import { BackendSrv, BackendSrvRequest, setBackendSrv } from '@grafana/runtime';
+import { searchResponse } from './testdata/search_response';
 import { topicsWithNoResponse } from './testdata/topics_with_no_response';
 import { topicsWithNoResponseFromBulkApi } from './testdata/topics_with_no_response_bulk';
 import { consolidatedPageViewsFromBulkApi } from './testdata/consolidated_page_views_bulk';
@@ -10,52 +11,81 @@ import { categories } from './testdata/categories';
 import { reports } from './testdata/reports';
 
 describe('DiscourseDatasource', () => {
-  const instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions> = {
+  const instanceSettings: DataSourceInstanceSettings = {
     id: 1,
     uid: '111',
     type: 'datasource',
     name: 'Discourse data source',
-    url: '/api/datasources/proxy/1',
+    url: '/api/datasources/proxy/1/discourse',
     meta: {} as PluginMeta,
     jsonData: {},
+    access: 'direct',
   };
   let ds: DiscourseDataSource;
 
-  beforeEach(() => {
-    ds = new DiscourseDataSource(instanceSettings);
-  });
-
   describe('testDatasource', () => {
-    describe('with a successful response', () => {
-      beforeEach(() => {
-        setupBackendSrv({
-          url: '/api/datasources/proxy/1/discourse/admin/reports/topics_with_no_response.json',
-          response: topicsWithNoResponse,
+    describe('for an unauthenticated request to search API', () => {
+      describe('with a successful response', () => {
+        beforeEach(() => {
+          ds = new DiscourseDataSource(instanceSettings);
+          setupBackendSrv({
+            url: '/api/datasources/proxy/1/discourse/search.json?q=find-me-in-the-json',
+            response: searchResponse,
+          });
         });
-      });
 
-      it('should return the success message', async () => {
-        const result = await ds.testDatasource();
-        expect(result.status).toBe('success');
-        expect(result.message).toBe('Success');
+        it('should return the success message', async () => {
+          const result = await ds.testDatasource();
+          expect(result.status).toBe('success');
+          expect(result.message).toBe('Success');
+        });
       });
     });
 
-    describe('with an authentication error', () => {
-      beforeEach(() => {
-        setupBackendSrv({
-          url: '/api/datasources/proxy/1/discourse/admin/reports/topics_with_no_response.json',
-          response: {
-            errors: ['The requested URL or resource could not be found.'],
-            error_type: 'not_found',
-          },
+    describe('for an authenticated request to reporting API', () => {
+      describe('with an authentication error', () => {
+        beforeEach(() => {
+          instanceSettings.jsonData = {
+            httpHeaderName1: 'Incorrect-Api-Key',
+            httpHeaderName2: 'Api-Username',
+          } as any;
+
+          ds = new DiscourseDataSource(instanceSettings);
+          setupBackendSrv({
+            url: '/api/datasources/proxy/1/discourse/admin/reports/topics_with_no_response.json',
+            response: {
+              errors: ['The requested URL or resource could not be found.'],
+              error_type: 'not_found',
+            },
+          });
+        });
+
+        it('should return the error message', async () => {
+          const result = await ds.testDatasource();
+          expect(result.status).toBe('error');
+          expect(result.message).toBe('Invalid credentials. Failed with request to the Discourse API');
         });
       });
 
-      it('should return the error message', async () => {
-        const result = await ds.testDatasource();
-        expect(result.status).toBe('error');
-        expect(result.message).toBe('Invalid credentials. Failed with request to the Discourse API');
+      describe('with a successful response', () => {
+        beforeEach(() => {
+          instanceSettings.jsonData = {
+            httpHeaderName1: 'Api-Key',
+            httpHeaderName2: 'Api-Username',
+          } as any;
+
+          ds = new DiscourseDataSource(instanceSettings);
+          setupBackendSrv({
+            url: '/api/datasources/proxy/1/discourse/admin/reports/topics_with_no_response.json',
+            response: topicsWithNoResponse,
+          });
+        });
+
+        it('should return the success message', async () => {
+          const result = await ds.testDatasource();
+          expect(result.status).toBe('success');
+          expect(result.message).toBe('Success');
+        });
       });
     });
   });
@@ -63,6 +93,7 @@ describe('DiscourseDatasource', () => {
   describe('query for metadata', () => {
     describe('for a category list', () => {
       beforeEach(() => {
+        ds = new DiscourseDataSource(instanceSettings);
         setupBackendSrv({
           url: '/api/datasources/proxy/1/discourse/categories.json',
           response: categories,
@@ -71,10 +102,10 @@ describe('DiscourseDatasource', () => {
 
       it('should return a list of top level categories', async () => {
         const result = await ds.getCategories();
-        expect(result.length).toBe(13);
+        expect(result.length).toBe(7);
         expect(result[0].label).toBe('All categories');
         expect(result[0].value).toBe('All categories');
-        expect(result[1].label).toBe('Grafana Support');
+        expect(result[1].label).toBe('Grafana');
         expect(result[1].value).toBe('33');
         expect(result[2].label).toBe('Grafana Loki');
         expect(result[2].value).toBe('41');
@@ -83,6 +114,7 @@ describe('DiscourseDatasource', () => {
 
     describe('for a report list', () => {
       beforeEach(() => {
+        ds = new DiscourseDataSource(instanceSettings);
         setupBackendSrv({
           url: '/api/datasources/proxy/1/discourse/admin/reports.json',
           response: reports,
@@ -101,9 +133,40 @@ describe('DiscourseDatasource', () => {
   });
 
   describe('query', () => {
+    describe('with old query properties', () => {
+      beforeEach(() => {
+        ds = new DiscourseDataSource(instanceSettings);
+        setupBackendSrv({
+          url:
+            '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[topics_with_no_response][start_date]=2020-03-15&reports[topics_with_no_response][end_date]=2020-03-22&reports[topics_with_no_response][limit]=1000' +
+            '&reports[topics_with_no_response][filters][category]=33&reports[topics_with_no_response][filters][include_subcategories]=true',
+          response: topicsWithNoResponseFromBulkApi,
+        });
+      });
+
+      it('should normalize(migrate) the old query fields to the new names', async () => {
+        const options = {
+          range: {
+            from: toUtc('2020-03-15T20:00:00Z'),
+            to: toUtc('2020-03-22T23:59:00Z'),
+          },
+          rangeRaw: {
+            from: 'now-4h',
+            to: 'now',
+          },
+          // In older versions, the queryType field was called type and had the value reports instead of report
+          targets: [{ type: 'reports', reportName: 'topics_with_no_response.json', category: '33' }],
+        } as any;
+
+        const result = await ds.query(options);
+        expect(result.data.length).toBe(1);
+      });
+    });
+
     describe('for a report', () => {
       describe('with a Discourse API response that returns a single time series', () => {
         beforeEach(() => {
+          ds = new DiscourseDataSource(instanceSettings);
           setupBackendSrv({
             url:
               '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[topics_with_no_response][start_date]=2020-03-15&reports[topics_with_no_response][end_date]=2020-03-22&reports[topics_with_no_response][limit]=1000' +
@@ -139,6 +202,7 @@ describe('DiscourseDatasource', () => {
 
       describe('with a Discourse API response that returns multiple time series', () => {
         beforeEach(() => {
+          ds = new DiscourseDataSource(instanceSettings);
           setupBackendSrv({
             url:
               '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[consolidated_page_views][start_date]=2020-07-01&reports[consolidated_page_views][end_date]=2020-07-31&reports[consolidated_page_views][limit]=1000',
@@ -187,6 +251,7 @@ describe('DiscourseDatasource', () => {
     describe('for users', () => {
       describe('with top public users Discourse API response', () => {
         beforeEach(() => {
+          ds = new DiscourseDataSource(instanceSettings);
           setupBackendSrv({
             url: '/api/datasources/proxy/1/discourse/directory_items.json?period=monthly&order=post_count',
             response: topPublicUsers,
@@ -229,7 +294,7 @@ function setupBackendSrv<T>({ url, response }: { url: string; response: T }): vo
       if (options.url === url) {
         return Promise.resolve({ data: response });
       }
-      throw new Error(`Unexpected url ${options.url}`);
+      throw new Error(`Unexpected url: ${options.url} Expected url: ${url}`);
     },
   } as BackendSrv);
 }

@@ -1,5 +1,4 @@
-import defaults from 'lodash/defaults';
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 
 import {
   DataQueryRequest,
@@ -18,9 +17,8 @@ import flatten from './flatten';
 
 import {
   DiscourseQuery,
-  DiscourseDataSourceOptions,
-  defaultQuery,
   DiscourseReports,
+  DiscourseTags,
   QueryType,
   DiscourseCategories,
   DiscourseBulkReports,
@@ -28,36 +26,138 @@ import {
   DiscourseReportData,
   isDiscourseReportMultipleData,
   isDiscourseReportData,
+  normalizeQuery,
 } from './types';
 
-export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, DiscourseDataSourceOptions> {
-  constructor(private instanceSettings: DataSourceInstanceSettings<DiscourseDataSourceOptions>) {
+export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
+  constructor(private instanceSettings: DataSourceInstanceSettings) {
     super(instanceSettings);
   }
 
+  // entrypoint for queries
   async query(options: DataQueryRequest<DiscourseQuery>): Promise<DataQueryResponse> {
-    const { range } = options;
+    const { range, scopedVars } = options;
     const from = range!.from.format('YYYY-MM-DD');
     const to = range!.to.format('YYYY-MM-DD');
-
     const data: DataQueryResponseData[] = [];
 
-    // Return a constant for each query.
+    // return a constant for each query.
     for (const target of options.targets) {
-      const query = defaults(target, defaultQuery);
+      const query = normalizeQuery(target);
+
       if (query.hide) {
         continue;
       }
 
+      // use switch instead
       if (query.queryType === QueryType.Report) {
         await this.executeReportQuery(query, from, to, data);
       } else if (query.queryType === QueryType.User) {
         await this.executeUserQuery(query, data);
+      } else if (query.queryType === QueryType.Tags) {
+        await this.executeTagsQuery(data);
+      } else if (query.queryType === QueryType.Tag) {
+        await this.executeTagQuery(query, data);
+      } else if (query.queryType === QueryType.Search) {
+        // support templated search queries
+        const searchVar = getTemplateSrv().replace(query.searchQuery, scopedVars);
+        await this.executeSearchQuery(searchVar, query, data);
       }
     }
     return { data };
   }
 
+  // logic for the search API
+  private async executeSearchQuery(searchVar: any, query: DiscourseQuery, data: any[]) {
+    if (query.searchArea === 'topics_posts') {
+      const filter = this.encodeFilter(searchVar, query);
+      const result = await this.apiGet(`search.json?q=${filter}`);
+      const firstTopics = result.data.topics;
+      const moreTopics = result.data.grouped_search_result.more_full_page_results;
+
+      // handle paginated search results as needed
+      if (moreTopics === true && query.getPaginated === true) {
+        const kind = 'search';
+        const paginatedQuery = `search.json?q=${filter}&page=`;
+
+        const allTopics = await this.paginatedResults(paginatedQuery, firstTopics, kind);
+
+        data.push(allTopics);
+      } else {
+        const frame = toDataFrame(firstTopics);
+
+        data.push(frame);
+      }
+    } else if (query.searchArea === 'users') {
+      const result = await this.apiGet(`u/search/users.json?term=${query.searchQuery}`);
+      const frame = toDataFrame(result.data.users);
+      data.push(frame);
+    } else {
+      const result = await this.apiGet(`/tags/filter/search.json?limit=10&q=${query.searchQuery}`);
+      const frame = toDataFrame(result.data.results);
+      data.push(frame);
+    }
+  }
+
+  // build URL-encoded filter
+  private encodeFilter(search: any, query: DiscourseQuery) {
+    const filters = [
+      [search, search],
+      [query.searchCategory, `%20%23${query.searchCategory}`],
+      [query.searchTag, `%20tags:${query.searchTag}`],
+      [query.searchPosted, `%20${query.searchPosted}:`],
+      [query.searchDate, query.searchDate],
+      [query.searchSort, `%20order:${query.searchSort}`],
+      [query.searchStatus, `%20status:${query.searchStatus}`],
+      [query.searchAuthor, `%20%40${query.searchAuthor}`],
+    ];
+
+    const nullCheck = filters.map((filter) => {
+      let results: any = [];
+
+      if (filter[0] !== '') {
+        results.push(filter[1]);
+      }
+      return results;
+    });
+
+    const joinFilter = nullCheck.flat().join('');
+    return joinFilter;
+  }
+
+  // pagination function for search api and tags api
+  private async paginatedResults(paginatedQuery: string, firstTopics: any, kind: string) {
+    let paginatedTopics: any[] = [];
+    let nextResult = true;
+    let data = {};
+
+    // limit results to 10 pages total (500 for search, 300 for tag)
+    // OR quit when nextResult returns null or undefined
+    const maxPage = 10;
+    for (let page = 1; page < maxPage && nextResult !== null && nextResult !== undefined; page++) {
+      try {
+        const request = await this.apiGet(`${paginatedQuery}${page}`);
+
+        if (kind === 'search') {
+          data = request.data.topics;
+          nextResult = request.data.grouped_search_result.more_full_page_results;
+        } else if (kind === 'tags') {
+          data = request.data.topic_list.topics;
+          nextResult = request.data.topic_list.more_topics_url;
+        }
+
+        paginatedTopics.push(data);
+      } catch (err) {
+        console.error(`Oops, something is wrong ${err}`);
+      }
+    }
+
+    const dataFrame = toDataFrame(firstTopics.concat(paginatedTopics.flat()));
+
+    return dataFrame;
+  }
+
+  // logic for the reporting API
   private async executeUserQuery(query: DiscourseQuery, data: any[]) {
     if (query.userQuery === 'topPublicUsers') {
       const result = await this.apiGet(`directory_items.json?period=${query.period || 'monthly'}&order=post_count`);
@@ -75,6 +175,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
+  // logic for the reporting API
   private async executeReportQuery(query: DiscourseQuery, from: string, to: string, data: any[]) {
     //strip the .json from the end
     const reportName = query.reportName?.substring(0, query.reportName.length - 5);
@@ -105,6 +206,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     }
   }
 
+  // logic for the reporting API
   private convertToDataFrame(query: DiscourseQuery, d: DiscourseReportData[], displayName: string, data: any[]) {
     const frame = new MutableDataFrame({
       refId: query.refId,
@@ -124,28 +226,31 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     data.push(frame);
   }
 
-  async testDatasource() {
-    let result: any;
-
-    try {
-      result = await this.apiGet('admin/reports/topics_with_no_response.json');
-    } catch (error) {
-      console.log(error);
-    }
-
-    if (result?.data?.report?.title !== 'Topics with no response') {
-      return {
-        status: 'error',
-        message: 'Invalid credentials. Failed with request to the Discourse API',
-      };
-    }
-
-    return {
-      status: 'success',
-      message: 'Success',
-    };
+  // logic for the tags (plural) API
+  private async executeTagsQuery(data: any[]) {
+    const result = await this.apiGet(`tags.json`);
+    const frame = toDataFrame(result.data.tags);
+    data.push(frame);
   }
 
+  // logic for the tag (singular) API
+  private async executeTagQuery(query: DiscourseQuery, data: any[]) {
+    const result = await this.apiGet(`tag/${query.tag}.json`);
+    const firstTopics = result.data.topic_list.topics;
+    const moreTopics = result.data.topic_list.more_topics_url;
+
+    // collect paginated results when needed
+    if (query.getPaginated === true && moreTopics !== undefined) {
+      const kind = 'tags';
+      const paginatedQuery = `tag/${query.tag}.json?page=`;
+      const allTopics = await this.paginatedResults(paginatedQuery, firstTopics, kind);
+      data.push(allTopics);
+    } else {
+      data.push(firstTopics);
+    }
+  }
+
+  // logic for populating the query editor with report options
   async getReportTypes(): Promise<Array<SelectableValue<string>>> {
     const reportOptions: Array<SelectableValue<string>> = [];
     try {
@@ -165,12 +270,14 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
     return reportOptions;
   }
 
+  // logic for populating the query editor with category options
   async getCategories(): Promise<Array<SelectableValue<string>>> {
     const categoryOptions: Array<SelectableValue<string>> = [];
     categoryOptions.push({
       label: 'All categories',
       value: 'All categories',
       description: '',
+      slug: '',
     });
 
     try {
@@ -181,19 +288,92 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery, Discourse
           label: category.name,
           value: category.id.toString(),
           description: category.description,
+          slug: category.slug,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return categoryOptions;
+  }
+
+  // logic for populating the query editor with tag options
+  async getTags(): Promise<Array<SelectableValue<any>>> {
+    const tagOptions: Array<SelectableValue<any>> = [];
+    tagOptions.push({
+      label: 'All tags',
+      value: 'All tags',
+      slug: '',
+    });
+
+    try {
+      const result: any = await this.apiGet('tags.json');
+
+      for (const tag of (result.data as DiscourseTags).tags) {
+        tagOptions.push({
+          label: tag.text,
+          value: tag.id.toString(),
+          slug: tag.text,
         });
       }
     } catch (error) {
       console.log(error);
     }
 
-    return categoryOptions;
+    return tagOptions;
   }
 
+  async testDatasource() {
+    // if user adds credentials, test reporting API. Otherwise, test search API
+    const headers = Object.values(this.instanceSettings.jsonData);
+
+    if (headers.includes('Api-Key' && 'Api-Username')) {
+      let result: any;
+
+      try {
+        result = await this.apiGet('admin/reports/topics_with_no_response.json');
+      } catch (error) {
+        console.log(error);
+      }
+
+      if (result?.data?.report?.title !== 'Topics with no response') {
+        return {
+          status: 'error',
+          message: 'Invalid credentials. Failed with request to the Discourse API',
+        };
+      }
+      return {
+        status: 'success',
+        message: 'Success',
+      };
+    } else {
+      let result: any;
+
+      try {
+        result = await this.apiGet('search.json?q=find-me-in-the-json');
+      } catch (error) {
+        console.log(error);
+      }
+
+      if (result?.data.grouped_search_result.term !== 'find-me-in-the-json') {
+        return {
+          status: 'error',
+          message: 'Invalid credentials. Failed with request to the Discourse API',
+        };
+      }
+      return {
+        status: 'success',
+        message: 'Success',
+      };
+    }
+  }
+
+  // TODO: .datasourceRequest is deprecated; switch to .fetch
   async apiGet(path: string): Promise<any> {
     const result = await getBackendSrv().datasourceRequest({
-      url: `${this.instanceSettings.url}/discourse/${path}`,
+      url: `${this.instanceSettings.url}/${path}`,
       method: 'GET',
+      params: this.query,
     });
 
     return result;

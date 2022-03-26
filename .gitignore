@@ -29,3 +29,7 @@ e2e-results/
 # Editor
 .idea
 
+# Docker dev environment
+# docker-compose.yaml
+provisioning/
+*.http
