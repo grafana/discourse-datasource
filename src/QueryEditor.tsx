@@ -1,9 +1,8 @@
-import defaults from 'lodash/defaults';
 import React, { PureComponent } from 'react';
 import { InlineFormLabel, Select, QueryField, DatePickerWithInput, Input, InlineSwitch } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DiscourseDataSource } from './DataSource';
-import { defaultQuery, DiscourseQuery, QueryType } from './types';
+import { defaultQuery, DiscourseQuery, QueryType, normalizeQuery } from './types';
 
 interface State {
   reportOptions: Array<SelectableValue<string>>;
@@ -228,13 +227,16 @@ export class QueryEditor extends PureComponent<Props, State> {
       const categoryOptions = await this.props.datasource.getCategories();
       const tagOptions = await this.props.datasource.getTags();
       this.setState({ reportOptions: reportOptions, categoryOptions: categoryOptions, tagOptions: tagOptions });
+      const query = normalizeQuery(this.props.query);
+      this.props.onChange(query);
+      this.props.onRunQuery();
     } catch (error) {
       console.log(error);
     }
   }
 
   render() {
-    const query = defaults(this.props.query, defaultQuery);
+    const query = normalizeQuery(this.props.query);
     const {
       queryType,
       reportName,

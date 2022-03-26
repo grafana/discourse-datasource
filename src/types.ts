@@ -1,4 +1,5 @@
 import { DataQuery } from '@grafana/data';
+import defaults from 'lodash/defaults';
 
 export interface DiscourseQuery extends DataQuery {
   queryType: string;
@@ -129,3 +130,15 @@ export interface DiscourseReportData {
 }
 
 export const isDiscourseReportData = (data: any): data is DiscourseReportData => data && data.hasOwnProperty('x');
+
+export const normalizeQuery = ({ queryType, type, ...rest }: any): DiscourseQuery => {
+  const normalizedQuery = {
+    queryType: queryType ?? type,
+    ...rest,
+  };
+
+  if (normalizedQuery.queryType === 'reports') {
+    normalizedQuery.queryType = 'report';
+  }
+  return defaults(normalizedQuery, defaultQuery);
+};

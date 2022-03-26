@@ -1,4 +1,3 @@
-import defaults from 'lodash/defaults';
 import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 
 import {
@@ -18,7 +17,6 @@ import flatten from './flatten';
 
 import {
   DiscourseQuery,
-  defaultQuery,
   DiscourseReports,
   DiscourseTags,
   QueryType,
@@ -28,6 +26,7 @@ import {
   DiscourseReportData,
   isDiscourseReportMultipleData,
   isDiscourseReportData,
+  normalizeQuery,
 } from './types';
 
 export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
@@ -44,7 +43,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
 
     // return a constant for each query.
     for (const target of options.targets) {
-      const query = defaults(target, defaultQuery);
+      const query = normalizeQuery(target);
 
       if (query.hide) {
         continue;

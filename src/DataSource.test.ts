@@ -133,6 +133,36 @@ describe('DiscourseDatasource', () => {
   });
 
   describe('query', () => {
+    describe('with old query properties', () => {
+      beforeEach(() => {
+        ds = new DiscourseDataSource(instanceSettings);
+        setupBackendSrv({
+          url:
+            '/api/datasources/proxy/1/discourse/admin/reports/bulk.json?reports[topics_with_no_response][start_date]=2020-03-15&reports[topics_with_no_response][end_date]=2020-03-22&reports[topics_with_no_response][limit]=1000' +
+            '&reports[topics_with_no_response][filters][category]=33&reports[topics_with_no_response][filters][include_subcategories]=true',
+          response: topicsWithNoResponseFromBulkApi,
+        });
+      });
+
+      it('should normalize(migrate) the old query fields to the new names', async () => {
+        const options = {
+          range: {
+            from: toUtc('2020-03-15T20:00:00Z'),
+            to: toUtc('2020-03-22T23:59:00Z'),
+          },
+          rangeRaw: {
+            from: 'now-4h',
+            to: 'now',
+          },
+          // In older versions, the queryType field was called type and had the value reports instead of report
+          targets: [{ type: 'reports', reportName: 'topics_with_no_response.json', category: '33' }],
+        } as any;
+
+        const result = await ds.query(options);
+        expect(result.data.length).toBe(1);
+      });
+    });
+
     describe('for a report', () => {
       describe('with a Discourse API response that returns a single time series', () => {
         beforeEach(() => {
