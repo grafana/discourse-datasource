@@ -112,17 +112,12 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       [query.searchAuthor, `%20%40${query.searchAuthor}`],
     ];
 
-    const nullCheck = filters.map((filter) => {
-      let results: any = [];
+    const nullCheck = filters
+      .filter((list) => list[0].length > 0)
+      .map((list) => list[1])
+      .join('');
 
-      if (filter[0] !== '') {
-        results.push(filter[1]);
-      }
-      return results;
-    });
-
-    const joinFilter = nullCheck.flat().join('');
-    return joinFilter;
+    return nullCheck;
   }
 
   // pagination function for search api and tags api
