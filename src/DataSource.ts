@@ -113,9 +113,9 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     ];
 
     const nullCheck = filters
-      .filter(list => list[0].length > 0)
-      .map(list => list[1])
-      .join('')
+      .filter((list) => list[0].length > 0)
+      .map((list) => list[1])
+      .join('');
 
     return nullCheck;
   }
