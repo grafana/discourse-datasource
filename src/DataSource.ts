@@ -129,6 +129,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     // limit results to 10 pages total (500 for search, 300 for tag)
     // OR quit when nextResult returns null or undefined
     const maxPage = 10;
+    // tags object returns endefined when empty. search object returns null when empty
     for (let page = 1; page < maxPage && nextResult !== null && nextResult !== undefined; page++) {
       try {
         const request = await this.apiGet(`${paginatedQuery}${page}`);
@@ -276,9 +277,9 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     });
 
     try {
-      const result: any = await this.apiGet('categories.json');
+      const result: any = await this.apiGet('site.json');
 
-      for (const category of (result.data as DiscourseCategories).category_list.categories) {
+      for (const category of (result.data as DiscourseCategories).categories) {
         categoryOptions.push({
           label: category.name,
           value: category.id.toString(),
