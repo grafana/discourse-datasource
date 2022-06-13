@@ -1,3 +1,7 @@
+> **WARNING: Breaking Change in version 2.0**
+
+>In Version 2.0.0, we replaced the aging configuration UI with a newer, more extensible version. These V2-style configurations will allow much finer control over networking details. V1-style configurations, unfortunately, must be re-entered using the new UI.
+
 # Grafana Discourse data source
 
 [![License](https://img.shields.io/github/license/grafana/discourse-datasource)](LICENSE)
