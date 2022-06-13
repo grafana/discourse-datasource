@@ -77,7 +77,7 @@ export interface DiscourseTag {
 }
 
 export interface DiscourseCategories {
-    categories: DiscourseCategory[];
+  categories: DiscourseCategory[];
 }
 
 export interface DiscourseCategory {
