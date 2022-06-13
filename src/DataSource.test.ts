@@ -100,7 +100,7 @@ describe('DiscourseDatasource', () => {
         });
       });
 
-      it('should return a list of top level categories', async () => {
+      it('should return a list of all categories and subcategories', async () => {
         const result = await ds.getCategories();
         expect(result.length).toBe(43);
         expect(result[0].label).toBe('All categories');
