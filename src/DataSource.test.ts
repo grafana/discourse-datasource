@@ -95,20 +95,20 @@ describe('DiscourseDatasource', () => {
       beforeEach(() => {
         ds = new DiscourseDataSource(instanceSettings);
         setupBackendSrv({
-          url: '/api/datasources/proxy/1/discourse/categories.json',
+          url: '/api/datasources/proxy/1/discourse/site.json',
           response: categories,
         });
       });
 
       it('should return a list of top level categories', async () => {
         const result = await ds.getCategories();
-        expect(result.length).toBe(7);
+        expect(result.length).toBe(43);
         expect(result[0].label).toBe('All categories');
         expect(result[0].value).toBe('All categories');
         expect(result[1].label).toBe('Grafana');
         expect(result[1].value).toBe('33');
-        expect(result[2].label).toBe('Grafana Loki');
-        expect(result[2].value).toBe('41');
+        expect(result[2].label).toBe('Installation');
+        expect(result[2].value).toBe('18');
       });
     });
 

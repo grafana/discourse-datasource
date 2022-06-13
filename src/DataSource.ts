@@ -290,6 +290,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
     } catch (error) {
       console.log(error);
     }
+    console.log(categoryOptions[0]);
     return categoryOptions;
   }
 
