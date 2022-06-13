@@ -33,3 +33,6 @@ e2e-results/
 # docker-compose.yaml
 provisioning/
 *.http
+
+# Other
+.DS_Store
