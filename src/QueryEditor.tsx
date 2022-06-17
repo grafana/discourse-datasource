@@ -294,6 +294,7 @@ export class QueryEditor extends PureComponent<Props, State> {
               onChange={(category) => {
                 this.onCategoryChange(category.value || defaultQuery.category || '');
               }}
+              allowCustomValue={true}
             />
           </div>
         )}
@@ -389,10 +390,11 @@ export class QueryEditor extends PureComponent<Props, State> {
                   <Select
                     width={30}
                     options={this.state.categoryOptions}
-                    value={this.state.categoryOptions.find((co) => co.slug === searchCategory)}
-                    onChange={(c) => {
-                      this.onSearchCategoryChange(c.slug || defaultQuery.searchCategory || '');
+                    value={this.state.categoryOptions.find((co) => co.value === searchCategory)}
+                    onChange={(searchCategory) => {
+                      this.onSearchCategoryChange(searchCategory.value || defaultQuery.searchCategory || '');
                     }}
+                    allowCustomValue={true}
                   />
                   <InlineFormLabel className="query-keyword" width={6}>
                     Tagged
