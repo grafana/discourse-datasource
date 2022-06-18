@@ -390,9 +390,9 @@ export class QueryEditor extends PureComponent<Props, State> {
                   <Select
                     width={30}
                     options={this.state.categoryOptions}
-                    value={this.state.categoryOptions.find((co) => co.value === searchCategory)}
+                    value={this.state.categoryOptions.find((co) => co.slug === searchCategory)}
                     onChange={(searchCategory) => {
-                      this.onSearchCategoryChange(searchCategory.value || defaultQuery.searchCategory || '');
+                      this.onSearchCategoryChange(searchCategory.slug || defaultQuery.searchCategory || '');
                     }}
                     allowCustomValue={true}
                   />
@@ -460,6 +460,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                     onChange={(s) => {
                       this.onSearchSortChange(s.value || '');
                     }}
+                    allowCustomValue={true}
                   />
                 </div>
               </div>

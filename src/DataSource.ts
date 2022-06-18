@@ -60,20 +60,21 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);
       } else if (query.queryType === QueryType.Search) {
-        // support basic templating for: [ search string, category ] 
+        // support basic templating for: [ search string, category, sorting ] 
         const searchCategoryVar = getTemplateSrv().replace(query.searchCategory, scopedVars);
         const searchVar = getTemplateSrv().replace(query.searchQuery, scopedVars);
+        const searchSortVar = getTemplateSrv().replace(query.searchSort, scopedVars);
         console.log(`catvar = ${searchCategoryVar}`, `searchVar = ${searchVar}`)
-        await this.executeSearchQuery(searchCategoryVar, searchVar, query, data);
+        await this.executeSearchQuery(searchSortVar, searchCategoryVar, searchVar, query, data);
       }
     }
     return { data };
   }
 
   // logic for the search API
-  private async executeSearchQuery(searchCategoryVar: any, searchVar: any, query: DiscourseQuery, data: any[]) {
+  private async executeSearchQuery(searchSortVar: any, searchCategoryVar: any, searchVar: any, query: DiscourseQuery, data: any[]) {
     if (query.searchArea === 'topics_posts') {
-      const filter = this.encodeFilter(searchCategoryVar, searchVar, query);
+      const filter = this.encodeFilter(searchSortVar, searchCategoryVar, searchVar, query);
       const result = await this.apiGet(`search.json?q=${filter}`);
       const firstTopics = result.data.topics;
       const moreTopics = result.data.grouped_search_result.more_full_page_results;
@@ -103,24 +104,25 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
   }
 
   // build URL-encoded filter
-  private encodeFilter(category: any, search: any, query: DiscourseQuery) {
+  private encodeFilter(sort: any, category: any, search: any, query: DiscourseQuery) {
     const filters = [
       [search, search],
       [category, `%20%23${category}`],
       [query.searchTag, `%20tags:${query.searchTag}`],
       [query.searchPosted, `%20${query.searchPosted}:`],
       [query.searchDate, query.searchDate],
-      [query.searchSort, `%20order:${query.searchSort}`],
+      [sort, `%20order:${sort}`],
       [query.searchStatus, `%20status:${query.searchStatus}`],
       [query.searchAuthor, `%20%40${query.searchAuthor}`],
     ];
 
-    const nullCheck = filters
+    // flatten encoding and exclude empty values
+    const encodedFilter = filters
       .filter((list) => list[0].length > 0)
       .map((list) => list[1])
       .join('');
 
-    return nullCheck;
+    return encodedFilter;
   }
 
   // pagination function for search api and tags api
