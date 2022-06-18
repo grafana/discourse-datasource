@@ -64,7 +64,6 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
         const searchCategoryVar = getTemplateSrv().replace(query.searchCategory, scopedVars);
         const searchVar = getTemplateSrv().replace(query.searchQuery, scopedVars);
         const searchSortVar = getTemplateSrv().replace(query.searchSort, scopedVars);
-        console.log(`catvar = ${searchCategoryVar}`, `searchVar = ${searchVar}`)
         await this.executeSearchQuery(searchSortVar, searchCategoryVar, searchVar, query, data);
       }
     }
