@@ -116,7 +116,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       [query.searchAuthor, `%20%40${query.searchAuthor}`],
     ];
 
-    // flatten encoding and exclude empty values
+    // flatten + join filters. exclude empty values
     const encodedFilter = filters
       .filter((list) => list[0].length > 0)
       .map((list) => list[1])
