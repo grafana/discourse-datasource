@@ -294,6 +294,7 @@ export class QueryEditor extends PureComponent<Props, State> {
               onChange={(category) => {
                 this.onCategoryChange(category.value || defaultQuery.category || '');
               }}
+              allowCustomValue={true}
             />
           </div>
         )}
@@ -390,9 +391,10 @@ export class QueryEditor extends PureComponent<Props, State> {
                     width={30}
                     options={this.state.categoryOptions}
                     value={this.state.categoryOptions.find((co) => co.slug === searchCategory)}
-                    onChange={(c) => {
-                      this.onSearchCategoryChange(c.slug || defaultQuery.searchCategory || '');
+                    onChange={(searchCategory) => {
+                      this.onSearchCategoryChange(searchCategory.slug || defaultQuery.searchCategory || '');
                     }}
+                    allowCustomValue={true}
                   />
                   <InlineFormLabel className="query-keyword" width={6}>
                     Tagged
@@ -458,6 +460,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                     onChange={(s) => {
                       this.onSearchSortChange(s.value || '');
                     }}
+                    allowCustomValue={true}
                   />
                 </div>
               </div>

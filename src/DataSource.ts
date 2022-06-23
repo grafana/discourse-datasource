@@ -51,7 +51,8 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
 
       // use switch instead
       if (query.queryType === QueryType.Report) {
-        await this.executeReportQuery(query, from, to, data);
+        const categoryVar = getTemplateSrv().replace(query.category, scopedVars);
+        await this.executeReportQuery(query, from, to, data, categoryVar);
       } else if (query.queryType === QueryType.User) {
         await this.executeUserQuery(query, data);
       } else if (query.queryType === QueryType.Tags) {
@@ -59,18 +60,26 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);
       } else if (query.queryType === QueryType.Search) {
-        // support templated search queries
+        // support basic templating for: [ search string, category, sorting ]
+        const searchCategoryVar = getTemplateSrv().replace(query.searchCategory, scopedVars);
         const searchVar = getTemplateSrv().replace(query.searchQuery, scopedVars);
-        await this.executeSearchQuery(searchVar, query, data);
+        const searchSortVar = getTemplateSrv().replace(query.searchSort, scopedVars);
+        await this.executeSearchQuery(searchSortVar, searchCategoryVar, searchVar, query, data);
       }
     }
     return { data };
   }
 
   // logic for the search API
-  private async executeSearchQuery(searchVar: any, query: DiscourseQuery, data: any[]) {
+  private async executeSearchQuery(
+    searchSortVar: any,
+    searchCategoryVar: any,
+    searchVar: any,
+    query: DiscourseQuery,
+    data: any[]
+  ) {
     if (query.searchArea === 'topics_posts') {
-      const filter = this.encodeFilter(searchVar, query);
+      const filter = this.encodeFilter(searchSortVar, searchCategoryVar, searchVar, query);
       const result = await this.apiGet(`search.json?q=${filter}`);
       const firstTopics = result.data.topics;
       const moreTopics = result.data.grouped_search_result.more_full_page_results;
@@ -100,24 +109,25 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
   }
 
   // build URL-encoded filter
-  private encodeFilter(search: any, query: DiscourseQuery) {
+  private encodeFilter(sort: any, category: any, search: any, query: DiscourseQuery) {
     const filters = [
       [search, search],
-      [query.searchCategory, `%20%23${query.searchCategory}`],
+      [category, `%20%23${category}`],
       [query.searchTag, `%20tags:${query.searchTag}`],
       [query.searchPosted, `%20${query.searchPosted}:`],
       [query.searchDate, query.searchDate],
-      [query.searchSort, `%20order:${query.searchSort}`],
+      [sort, `%20order:${sort}`],
       [query.searchStatus, `%20status:${query.searchStatus}`],
       [query.searchAuthor, `%20%40${query.searchAuthor}`],
     ];
 
-    const nullCheck = filters
+    // flatten + join filters. exclude empty values
+    const encodedFilter = filters
       .filter((list) => list[0].length > 0)
       .map((list) => list[1])
       .join('');
 
-    return nullCheck;
+    return encodedFilter;
   }
 
   // pagination function for search api and tags api
@@ -172,15 +182,15 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
   }
 
   // logic for the reporting API
-  private async executeReportQuery(query: DiscourseQuery, from: string, to: string, data: any[]) {
+  private async executeReportQuery(query: DiscourseQuery, from: string, to: string, data: any[], categoryVar: any) {
     //strip the .json from the end
     const reportName = query.reportName?.substring(0, query.reportName.length - 5);
     const limit = 1000;
 
     let filter = `reports[${reportName}][start_date]=${from}&reports[${reportName}][end_date]=${to}&reports[${reportName}][limit]=${limit}`;
 
-    if (query.category && query.category !== 'All categories') {
-      filter += `&reports[${reportName}][filters][category]=${query.category}&reports[${reportName}][filters][include_subcategories]=true`;
+    if (categoryVar && categoryVar !== 'All categories') {
+      filter += `&reports[${reportName}][filters][category]=${categoryVar}&reports[${reportName}][filters][include_subcategories]=true`;
     }
 
     const requestUrl = `admin/reports/bulk.json?${filter}`;
