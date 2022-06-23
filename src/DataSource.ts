@@ -60,7 +60,7 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
       } else if (query.queryType === QueryType.Tag) {
         await this.executeTagQuery(query, data);
       } else if (query.queryType === QueryType.Search) {
-        // support basic templating for: [ search string, category, sorting ] 
+        // support basic templating for: [ search string, category, sorting ]
         const searchCategoryVar = getTemplateSrv().replace(query.searchCategory, scopedVars);
         const searchVar = getTemplateSrv().replace(query.searchQuery, scopedVars);
         const searchSortVar = getTemplateSrv().replace(query.searchSort, scopedVars);
@@ -71,7 +71,13 @@ export class DiscourseDataSource extends DataSourceApi<DiscourseQuery> {
   }
 
   // logic for the search API
-  private async executeSearchQuery(searchSortVar: any, searchCategoryVar: any, searchVar: any, query: DiscourseQuery, data: any[]) {
+  private async executeSearchQuery(
+    searchSortVar: any,
+    searchCategoryVar: any,
+    searchVar: any,
+    query: DiscourseQuery,
+    data: any[]
+  ) {
     if (query.searchArea === 'topics_posts') {
       const filter = this.encodeFilter(searchSortVar, searchCategoryVar, searchVar, query);
       const result = await this.apiGet(`search.json?q=${filter}`);
