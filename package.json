@@ -1,6 +1,6 @@
 {
   "name": "grafana-discourse-datasource",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Data source for the hosted Discourse forum software",
   "scripts": {
     "build": "grafana-toolkit plugin:build",
@@ -12,10 +12,10 @@
   "author": "Daniel Lee & Matt Abrams",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/data": "8.3.4",
-    "@grafana/toolkit": "8.3.4",
-    "@grafana/runtime": "8.3.4",
-    "@grafana/ui": "8.3.4",
+    "@grafana/data": "8.3.7",
+    "@grafana/toolkit": "9.0.1",
+    "@grafana/runtime": "8.3.7",
+    "@grafana/ui": "8.3.7",
     "@testing-library/jest-dom": "5.4.0",
     "@testing-library/react": "^11.2.5",
     "@types/lodash": "latest",

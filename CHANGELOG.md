@@ -1,3 +1,11 @@
+## 2.0.1
+
+Adds basic template support
+
+## 2.0.0
+
+Not released
+
 ## 1.1.0
 
 - Adds filtering for top level categories for report queries that enables getting metrics for a specific top-level category. [#4](https://github.com/grafana/discourse-datasource/pull/4)
