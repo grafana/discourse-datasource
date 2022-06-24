@@ -1,3 +1,5 @@
+# Changelog
+
 ## 2.0.2
 
 Signed release, see README about new UI and features
