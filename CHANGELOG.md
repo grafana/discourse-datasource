@@ -1,6 +1,10 @@
+## 2.0.2
+
+Signed release, see README about new UI and features
+
 ## 2.0.1
 
-Adds basic template support
+Not released
 
 ## 2.0.0
 
