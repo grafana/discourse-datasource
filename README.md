@@ -5,7 +5,7 @@
 # Grafana Discourse data source
 
 [![License](https://img.shields.io/github/license/grafana/discourse-datasource)](LICENSE)
-![GitHub Actions CI](https://github.com/grafana/discourse-datasource/actions/workflows/ci.yml/badge.svg)
+[![Build Status](https://drone.grafana.net/api/badges/grafana/discourse-datasource/status.svg)](https://drone.grafana.net/grafana/discourse-datasource)
 
 The Discourse data source plugin allows users to search and view topics, posts, users, tags, categories, and reports on a given Discourse forum. It uses 5 different queries; 3 are public while 2 require an API key:
 
