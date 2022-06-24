@@ -1,0 +1,51 @@
+{
+  "type": "datasource",
+  "name": "Discourse Datasource",
+  "id": "grafana-discourse-datasource",
+  "metrics": true,
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Topics and replies",
+      "path": "dashboards/topics.json"
+    }
+  ],
+  "info": {
+    "description": "Data source for the hosted Discourse forum software",
+    "author": {
+      "name": "Grafana Labs",
+      "url": "https://grafana.com"
+    },
+    "keywords": ["discourse"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/discourse-datasource"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/discourse-datasource/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [
+      {
+        "name": "Topics dashboard",
+        "path": "img/topics-dashboard.png"
+      },
+      {
+        "name": "Query editor",
+        "path": "img/topics-query-editor.png"
+      }
+    ],
+    "version": "2.0.2",
+    "updated": "2022-06-24"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=8.3.0",
+    "plugins": []
+  }
+}
